@@ -444,6 +444,125 @@
             </table>
         </div>
 
+        <!-- =================================================================== -->
+        <!-- PAGE 4: RINGKASAN AUDIT KELAYAKAN TUNTUTAN (LAYAK VS TIDAK LAYAK)   -->
+        <!-- =================================================================== -->
+        <div class="pdf-page" id="page4Print">
+            
+            <div class="text-center mb-4">
+                <div class="inline-block bg-blue-900 text-white text-[9px] font-black px-3 py-0.5 rounded-full mb-1">
+                    HALAMAN RINGKASAN AUDIT &amp; PENGESAHAN
+                </div>
+                <h3 class="font-black text-[12pt] uppercase tracking-wide">RINGKASAN AUDIT KELAYAKAN TUNTUTAN ELAUN LEBIH MASA (ELM)</h3>
+                <h4 class="font-bold text-[10pt] uppercase text-blue-950" id="docPage4HeaderMonth">BAGI BULAN JULAI 2026 / OGOS 2026</h4>
+                <p class="text-[8pt] text-slate-500">Analisis Terperinci Jam Bekerja Hakiki, Penyerapan Defisit, &amp; Pecahan Bayaran Mengikut Pekali</p>
+            </div>
+
+            <!-- PROFIL PEGAWAI RINGKAS -->
+            <div class="border border-black p-2.5 text-[8pt] bg-slate-50 mb-4">
+                <table style="width: 100%; border: none; font-size: 8pt; border-collapse: collapse;">
+                    <tr>
+                        <td style="width: 18%; font-weight: bold; border: none; padding: 2px 4px;">Nama Pegawai</td>
+                        <td style="width: 2%; border: none; padding: 2px 4px;">:</td>
+                        <td style="width: 35%; font-weight: bold; border: none; padding: 2px 4px;" id="p4Name">ADNAN BIN AWANG</td>
+                        <td style="width: 18%; font-weight: bold; border: none; padding: 2px 4px;">Gaji Pokok</td>
+                        <td style="width: 2%; border: none; padding: 2px 4px;">:</td>
+                        <td style="width: 25%; font-weight: bold; border: none; padding: 2px 4px;" id="p4Gaji">RM 3,208.19</td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: bold; border: none; padding: 2px 4px;">No. Kad Pengenalan</td>
+                        <td style="border: none; padding: 2px 4px;">:</td>
+                        <td style="border: none; padding: 2px 4px;" id="p4Nokp">690901035173</td>
+                        <td style="font-weight: bold; border: none; padding: 2px 4px;">Kadar Sejam</td>
+                        <td style="border: none; padding: 2px 4px;">:</td>
+                        <td style="border: none; padding: 2px 4px; font-weight: bold; color: #1e3a8a;" id="p4Kadar">RM 15.37</td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: bold; border: none; padding: 2px 4px;">Jawatan / Gred</td>
+                        <td style="border: none; padding: 2px 4px;">:</td>
+                        <td style="border: none; padding: 2px 4px;" id="p4Jawatan">Pembantu Keselamatan KP1</td>
+                        <td style="font-weight: bold; border: none; padding: 2px 4px;">Had Siling 1/3 Gaji</td>
+                        <td style="border: none; padding: 2px 4px;">:</td>
+                        <td style="border: none; padding: 2px 4px; font-weight: bold; color: #047857;" id="p4Siling">RM 1,069.40</td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- JADUAL ANALISIS MINGGUAN LAYAK VS TAK LAYAK -->
+            <table class="official-table mb-4" id="tablePage4Audit">
+                <thead>
+                    <tr class="bg-slate-100 text-[8pt]">
+                        <th style="width: 11%;">Minggu</th>
+                        <th style="width: 14%;">Jam Hakiki Dilakukan</th>
+                        <th style="width: 14%;">Defisit Jam Wajib (45j)</th>
+                        <th style="width: 14%;">Arahan KLM Kasar</th>
+                        <th style="width: 15%;">Jam Diserap (Tak Layak)</th>
+                        <th style="width: 16%;">Jam Bersih Layak ELM</th>
+                        <th style="width: 16%;">Jumlah Bayaran ELM</th>
+                    </tr>
+                </thead>
+                <tbody id="bodyPage4Audit">
+                    <!-- Dynamic rows injected via JS -->
+                </tbody>
+                <tfoot>
+                    <tr class="font-bold bg-slate-100 text-[8.5pt]">
+                        <td class="text-center">JUMLAH</td>
+                        <td id="p4TotalHakiki">160 Jam</td>
+                        <td id="p4TotalDefisit" class="text-red-700">20 Jam</td>
+                        <td id="p4TotalGrossKlm">74 Jam</td>
+                        <td id="p4TotalTakLayak" class="text-red-700 font-black">20 Jam</td>
+                        <td id="p4TotalLayak" class="text-emerald-800 font-black">45 Jam</td>
+                        <td id="p4TotalMoney" class="text-blue-900 font-black text-[9.5pt]">RM 803.07</td>
+                    </tr>
+                </tfoot>
+            </table>
+
+            <!-- PECAHAN STATISTIK & NILAI RINGGIT -->
+            <div class="grid grid-cols-2 gap-3 mb-4 text-left">
+                <div class="border border-red-300 bg-red-50/60 p-2.5 rounded text-[8pt]">
+                    <span class="font-bold text-red-900 block text-[8.5pt] mb-1">
+                        <i class="fa-solid fa-circle-xmark text-red-600 mr-1"></i> STATUS JAM &amp; DUIT TIDAK LAYAK (DEFISIT):
+                    </span>
+                    <ul class="space-y-1 text-slate-700">
+                        <li>• Jumlah Jam Defisit Wajib: <strong id="p4StatDefisitHours">20 Jam</strong></li>
+                        <li>• Jam OT Digunakan Serap Defisit: <strong id="p4StatTakLayakHours">20 Jam</strong></li>
+                        <li>• Nilai OT Diserap (Tak Layak): <strong class="text-red-700" id="p4StatTakLayakMoney">RM 345.83</strong></li>
+                    </ul>
+                </div>
+
+                <div class="border border-emerald-300 bg-emerald-50/60 p-2.5 rounded text-[8pt]">
+                    <span class="font-bold text-emerald-900 block text-[8.5pt] mb-1">
+                        <i class="fa-solid fa-circle-check text-emerald-600 mr-1"></i> STATUS JAM &amp; DUIT LAYAK DIBAYAR:
+                    </span>
+                    <ul class="space-y-1 text-slate-700">
+                        <li>• Jumlah Jam Bersih Layak ELM: <strong id="p4StatLayakHours">45 Jam</strong></li>
+                        <li>• Pecahan: <span id="p4StatSiangHours" class="font-semibold">18j Siang</span> &amp; <span id="p4StatMalamHours" class="font-semibold">27j Malam</span></li>
+                        <li>• <strong>JUMLAH KELULUSAN ELM: <span class="text-emerald-800 font-black text-[9pt]" id="p4StatTotalPaid">RM 803.07</span></strong></li>
+                        <li>• Status Had Siling 1/3: <span class="font-bold text-emerald-700" id="p4StatSilingStatus">LULUS HAD SILING (RM 1,069.40)</span></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- PERAKUAN & PENGESAHAN AUDIT -->
+            <table style="width: 100%; border-collapse: collapse; text-align: center; font-size: 8pt; margin-top: 30px;">
+                <tr>
+                    <td style="width: 50%; border: none;">
+                        Disemak &amp; Disahkan Betul:<br><br><br><br>
+                        ____________________________<br>
+                        <strong>(TAMIL ARASI A/P SAMINAITHAN)</strong><br>
+                        <span class="text-[7.5pt]">Pen. Peg. Tadbir Kanan N6</span>
+                    </td>
+                    <td style="width: 50%; border: none;">
+                        Diluluskan Untuk Pembayaran:<br><br><br><br>
+                        ____________________________<br>
+                        <strong>(MOHD REZWAN BIN KELWON)</strong><br>
+                        <span class="text-[7.5pt]">Jurutera Mekanikal J10</span>
+                    </td>
+                </tr>
+            </table>
+
+        </div>
+
     </main>
 
     <!-- =================================================================== -->
@@ -1111,6 +1230,69 @@
             document.getElementById("sumCeilingStatus").innerHTML = isPassedCeiling 
                 ? `<span class="inline-block w-2 h-2 rounded-full bg-emerald-500 mr-1"></span> Lulus Siling 1/3 (RM ${activeGuard.siling.toFixed(2)})` 
                 : `<span class="inline-block w-2 h-2 rounded-full bg-red-500 mr-1"></span> Melebihi Siling 1/3 (RM ${activeGuard.siling.toFixed(2)})`;
+
+            // POPULATE PAGE 4: RINGKASAN AUDIT KELAYAKAN TUNTUTAN
+            document.getElementById("docPage4HeaderMonth").textContent = `BAGI BULAN ${document.getElementById("lblMonthHeader").textContent}`;
+            document.getElementById("p4Name").textContent = activeGuard.name;
+            document.getElementById("p4Nokp").textContent = activeGuard.nokp;
+            document.getElementById("p4Jawatan").textContent = activeGuard.jawatan;
+            document.getElementById("p4Gaji").textContent = `RM ${activeGuard.gaji.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            document.getElementById("p4Kadar").textContent = `RM ${activeGuard.kadar.toFixed(2)}`;
+            document.getElementById("p4Siling").textContent = `RM ${activeGuard.siling.toFixed(2)}`;
+
+            let p4AuditRowsHtml = "";
+            let totalDefisitHours = 0;
+            let totalTakLayakHours = 0;
+            let totalTakLayakMoney = 0;
+            let totalLayakHours = 0;
+            let totalLayakSiangHours = 0;
+            let totalLayakMalamHours = 0;
+
+            for (let w = 0; w < 4; w++) {
+                const b = weekElmBreakdowns[w];
+                const wHakiki = weekHoursList[w];
+                const wDefisit = Math.max(0, 45 - wHakiki);
+                const wGross = weekKlmGrossList[w];
+                const wTakLayakH = b.takLayakHours;
+                const wTakLayakM = parseFloat(b.takLayakMoney);
+                const wLayakH = b.layakSiangHours + b.layakMalamHours;
+                const wPaidM = parseFloat(b.totalWeekMoney);
+
+                totalDefisitHours += wDefisit;
+                totalTakLayakHours += wTakLayakH;
+                totalTakLayakMoney += wTakLayakM;
+                totalLayakHours += wLayakH;
+                totalLayakSiangHours += b.layakSiangHours;
+                totalLayakMalamHours += b.layakMalamHours;
+
+                p4AuditRowsHtml += `
+                <tr>
+                    <td class="font-bold text-center py-2">Minggu ${w + 1} (${b.weekLetter})</td>
+                    <td class="text-center font-semibold">${wHakiki} Jam</td>
+                    <td class="text-center text-red-700 font-bold">${wDefisit} Jam</td>
+                    <td class="text-center font-semibold">${wGross} Jam${b.mark}</td>
+                    <td class="text-center text-red-700 font-bold">${wTakLayakH > 0 ? `${wTakLayakH} Jam (RM ${wTakLayakM.toFixed(2)})` : "-"}</td>
+                    <td class="text-center text-emerald-800 font-bold">${wLayakH} Jam <span class="text-[7.5pt] font-normal text-slate-500">(${b.layakSiangHours}j S + ${b.layakMalamHours}j M)</span></td>
+                    <td class="text-center font-black text-blue-900">RM ${wPaidM.toFixed(2)}</td>
+                </tr>`;
+            }
+
+            document.getElementById("bodyPage4Audit").innerHTML = p4AuditRowsHtml;
+            document.getElementById("p4TotalHakiki").textContent = `${sumHakiki4Weeks} Jam`;
+            document.getElementById("p4TotalDefisit").textContent = `${totalDefisitHours} Jam`;
+            document.getElementById("p4TotalGrossKlm").textContent = `${sumGrossKlmVal} Jam`;
+            document.getElementById("p4TotalTakLayak").textContent = `${totalTakLayakHours} Jam (RM ${totalTakLayakMoney.toFixed(2)})`;
+            document.getElementById("p4TotalLayak").textContent = `${totalLayakHours} Jam`;
+            document.getElementById("p4TotalMoney").textContent = grandTotalFormatted;
+
+            document.getElementById("p4StatDefisitHours").textContent = `${totalDefisitHours} Jam (45j x 4 = 180j)`;
+            document.getElementById("p4StatTakLayakHours").textContent = `${totalTakLayakHours} Jam`;
+            document.getElementById("p4StatTakLayakMoney").textContent = `RM ${totalTakLayakMoney.toFixed(2)}`;
+            document.getElementById("p4StatLayakHours").textContent = `${totalLayakHours} Jam`;
+            document.getElementById("p4StatSiangHours").textContent = `${totalLayakSiangHours} Jam Siang`;
+            document.getElementById("p4StatMalamHours").textContent = `${totalLayakMalamHours} Jam Malam`;
+            document.getElementById("p4StatTotalPaid").textContent = grandTotalFormatted;
+            document.getElementById("p4StatSilingStatus").textContent = isPassedCeiling ? `LULUS HAD SILING (RM ${activeGuard.siling.toFixed(2)})` : `MELEBIHI HAD SILING (RM ${activeGuard.siling.toFixed(2)})`;
 
             if (shouldSave) {
                 saveToLocalStorage();
