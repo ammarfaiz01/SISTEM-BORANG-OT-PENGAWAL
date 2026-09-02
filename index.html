@@ -54,15 +54,27 @@
             background-color: #f8fafc;
         }
 
-        .hrm-box, .hkm-box {
-            background-color: #708238 !important; /* Olive/green matching scanned doc */
-            color: #000000;
+        .hrm-box {
+            background-color: #fde2d2 !important; /* Soft Peach / Salmon (JPA 2024 Circular) */
+            color: #7c2d12 !important;
+            font-weight: bold;
+        }
+
+        .hkm-box {
+            background-color: #bfdbfe !important; /* Soft Sky Blue (JPA 2024 Circular) */
+            color: #1e3a8a !important;
+            font-weight: bold;
+        }
+
+        .hka-box {
+            background-color: #fca5a5 !important; /* Soft Red / Krismas (JPA 2024 Circular) */
+            color: #7f1d1d !important;
             font-weight: bold;
         }
 
         .klm-box {
-            background-color: #fff275 !important; /* Yellow matching scanned doc */
-            color: #000000;
+            background-color: #fdba74 !important; /* Warm Orange / Amber (JPA 2024 Circular) */
+            color: #7c2d12 !important;
             font-weight: bold;
             line-height: 1.15;
         }
@@ -111,8 +123,8 @@
                 </div>
                 <div>
                     <h1 class="text-base font-extrabold tracking-tight flex items-center gap-2">
-                        SISTEM PENJANA &amp; PENGIRA OT INTERAKTIF
-                        <span class="bg-amber-400 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded shadow-sm">JPA FORMAT RASMI</span>
+                        SISTEM PENJANA &amp; PENGIRA OT INTERAKTIF <span class="bg-blue-500 text-white text-[11px] font-black px-2 py-0.5 rounded-full ml-1 shadow-sm">V2.0</span>
+                        <span class="bg-amber-400 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded shadow-sm">PEKELILING JPA 2024</span>
                     </h1>
                     <p class="text-xs text-blue-200">Isi Syif Dengan Hanya 'Tick' / Pilih, Pengiraan Jam &amp; Duit OT Dijana 100% Automatik</p>
                 </div>
@@ -1069,9 +1081,17 @@
 
                     dateCells += `<td style="font-weight:bold;">${dtInfo.formatted}</td>`;
 
-                    // Hakiki Box
-                    const isOff = (cellData.hakiki === "HRM" || cellData.hakiki === "HKM" || cellData.hakiki === "HKA");
-                    const offCls = isOff ? "hrm-box" : "";
+                    // Hakiki Box (JPA 2024 Colors: HRM=Peach, HKM=Sky Blue, HKA=Red)
+                    const isHRM = (cellData.hakiki === "HRM");
+                    const isHKM = (cellData.hakiki === "HKM");
+                    const isHKA = (cellData.hakiki === "HKA");
+                    const isOff = (isHRM || isHKM || isHKA);
+                    
+                    let offCls = "";
+                    if (isHRM) offCls = "hrm-box";
+                    else if (isHKM) offCls = "hkm-box";
+                    else if (isHKA) offCls = "hka-box";
+
                     const hakikiFormatted = formatCellContent(cellData.hakiki);
                     hakikiCells += `<td class="interactive-cell ${offCls}" onclick="openEditModal(${w}, ${d})" title="Klik untuk ubah">${hakikiFormatted}</td>`;
 
@@ -1079,7 +1099,7 @@
                         weekWorkHours += cellData.hHours;
                     }
 
-                    // KLM Box
+                    // KLM Box (Warm Orange)
                     if (cellData.kGross > 0) {
                         weekGrossKlm += cellData.kGross;
                         weekGrossSiang += cellData.kSiang;
@@ -1102,32 +1122,52 @@
                 const netKlm = Math.max(0, weekGrossKlm - restDeduction);
                 weekNetKlmList.push({ gross: weekGrossKlm, rest: restDeduction, net: netKlm, mark: weekMarks[w] });
 
-                // DEFICIT FROM 45 HOURS RULE:
-                // If hakiki hours < 45h (e.g. 40h), deficit (5h) is offset from eligible OT hours!
-                const deficitFrom45 = Math.max(0, 45 - weekWorkHours); // e.g. 5 jam
-
-                // Calculate Siang & Malam Breakdown
+                // HAKIKI ANALYSIS (JPA 2024 PPSM WAKTU BEKERJA CERAIAN SR.4.3.1 & SR.4.4.1):
                 let netSiang = weekGrossSiang;
                 let netMalam = weekGrossMalam;
 
-                // Subtract 5 hours from siang first (as seen in JPA official calculation)
-                const takLayakSiang = Math.min(deficitFrom45, netSiang);
-                const layakSiang = Math.max(0, netSiang - takLayakSiang);
-                const layakMalam = netMalam;
+                let surplusHours = 0;
+                let surplusMoney = 0;
+                let takLayakSiang = 0;
+                let takLayakMalam = 0;
+                let layakSiang = netSiang;
+                let layakMalam = netMalam;
+
+                if (weekWorkHours > 45) {
+                    // Situasi 2 (Muka Surat 143): Lebihan jam hakiki (>45j) dikira sebagai OT (HBB Siang 1.125)
+                    surplusHours = weekWorkHours - 45;
+                    surplusMoney = parseFloat((surplusHours * 1.125 * activeGuard.kadar).toFixed(2));
+                    takLayakSiang = 0;
+                    takLayakMalam = 0;
+                    layakSiang = netSiang;
+                    layakMalam = netMalam;
+                } else {
+                    // Kurang daripada 45 jam: Defisit diserap dari jam OT siang terlebih dahulu
+                    const deficitFrom45 = Math.max(0, 45 - weekWorkHours);
+                    takLayakSiang = Math.min(deficitFrom45, netSiang);
+                    layakSiang = Math.max(0, netSiang - takLayakSiang);
+                    const remainingDeficit = deficitFrom45 - takLayakSiang;
+                    takLayakMalam = Math.min(remainingDeficit, netMalam);
+                    layakMalam = Math.max(0, netMalam - takLayakMalam);
+                }
 
                 const siangMoney = parseFloat((layakSiang * 1.125 * activeGuard.kadar).toFixed(2));
                 const malamMoney = parseFloat((layakMalam * 1.25 * activeGuard.kadar).toFixed(2));
-                const weekTotalElmMoney = siangMoney + malamMoney;
+                const weekTotalElmMoney = surplusMoney + siangMoney + malamMoney;
                 grandTotalElmMoney += weekTotalElmMoney;
 
                 const yr2Digit = (weekDates[w] && weekDates[w][0]) ? String(weekDates[w][0].yNum).slice(-2) : "26";
                 weekElmBreakdowns.push({
                     weekLetter: String.fromCharCode(97 + w),
+                    hasSurplus: (surplusHours > 0),
+                    surplusHours: surplusHours,
+                    surplusMoney: surplusMoney.toFixed(2),
+                    weekWorkHours: weekWorkHours,
                     netKlm: netKlm,
                     mark: weekMarks[w],
                     datesStr: otDates.join(", ") + "/" + yr2Digit,
-                    takLayakHours: takLayakSiang,
-                    takLayakMoney: (takLayakSiang * 1.125 * activeGuard.kadar).toFixed(2),
+                    takLayakHours: (takLayakSiang + takLayakMalam),
+                    takLayakMoney: ((takLayakSiang * 1.125 + takLayakMalam * 1.25) * activeGuard.kadar).toFixed(2),
                     layakSiangHours: layakSiang,
                     layakSiangMoney: siangMoney.toFixed(2),
                     layakMalamHours: layakMalam,
@@ -1138,14 +1178,31 @@
                 });
 
                 const markStr = weekMarks[w];
-                const klmDisplay = (weekGrossKlm > 0) ? `${weekGrossKlm} Jam${markStr}` : "0";
+                let topKlmHtml = "";
+                let btmKlmHtml = "-";
+
+                if (surplusHours > 0) {
+                    topKlmHtml = `(a)<br>${weekWorkHours} - 45<br>= ${surplusHours}`;
+                    if (weekGrossKlm > 0) {
+                        btmKlmHtml = `(b)<br>${weekGrossKlm}${markStr}`;
+                    } else {
+                        btmKlmHtml = `(b)<br>-`;
+                    }
+                } else {
+                    topKlmHtml = "";
+                    if (weekGrossKlm > 0) {
+                        btmKlmHtml = `${weekGrossKlm} Jam${markStr}`;
+                    } else {
+                        btmKlmHtml = "-";
+                    }
+                }
 
                 tableHtml += `
                 <tr>
                     <td rowspan="2" style="font-weight:bold;">Minggu ${w + 1}</td>
                     ${dateCells}
-                    <td rowspan="3" style="font-weight:bold; font-size:8.5pt;">${weekWorkHours} Jam</td>
-                    <td rowspan="2"></td>
+                    <td rowspan="3" style="font-weight:bold; font-size:8.5pt; vertical-align:middle;">${weekWorkHours} Jam</td>
+                    <td rowspan="2" style="font-weight:bold; font-size:8pt; vertical-align:middle; line-height:1.25;">${topKlmHtml}</td>
                 </tr>
                 <tr>
                     ${hakikiCells}
@@ -1153,7 +1210,7 @@
                 <tr>
                     <td style="font-weight:bold;">Arahan KLM (jam)</td>
                     ${klmCells}
-                    <td style="font-weight:bold; font-size:8.5pt;">${klmDisplay}</td>
+                    <td style="font-weight:bold; font-size:8.5pt; vertical-align:middle; line-height:1.25;">${btmKlmHtml}</td>
                 </tr>`;
             }
 
@@ -1178,8 +1235,17 @@
             let formulaElmHtml = "";
             weekNetKlmList.forEach((item, idx) => {
                 const letter = String.fromCharCode(97 + idx);
-                netKlmHtml += `(${letter}) ${item.gross} Jam – ${item.rest} Jam${item.mark} = <strong>${item.net} Jam</strong><br>`;
-                formulaElmHtml += `(${letter}) [${activeGuard.kadar.toFixed(2)} x pekali HBB x ${item.net} jam]${item.mark}<br>`;
+                const b = weekElmBreakdowns[idx];
+                if (b.hasSurplus) {
+                    netKlmHtml += `(${letter}1) Lebihan ${b.surplusHours} Jam (${b.weekWorkHours}j – 45j)<br>`;
+                    if (item.gross > 0) {
+                        netKlmHtml += `(${letter}2) ${item.gross} Jam – ${item.rest} Jam${item.mark} = <strong>${item.net} Jam</strong><br>`;
+                    }
+                    formulaElmHtml += `(${letter}) [${activeGuard.kadar.toFixed(2)} x 1.125 x ${b.surplusHours}j] + KLM${item.mark}<br>`;
+                } else {
+                    netKlmHtml += `(${letter}) ${item.gross} Jam – ${item.rest} Jam${item.mark} = <strong>${item.net} Jam</strong><br>`;
+                    formulaElmHtml += `(${letter}) [${activeGuard.kadar.toFixed(2)} x pekali HBB x ${item.net} jam]${item.mark}<br>`;
+                }
             });
             document.getElementById("p2RowNetKlm").innerHTML = netKlmHtml;
             document.getElementById("p2RowFormulaElm").innerHTML = formulaElmHtml;
@@ -1244,24 +1310,28 @@
                 const wGross = weekKlmGrossList[w];
                 const wTakLayakH = b.takLayakHours;
                 const wTakLayakM = parseFloat(b.takLayakMoney);
-                const wLayakH = b.layakSiangHours + b.layakMalamHours;
+                const wLayakH = (b.surplusHours || 0) + b.layakSiangHours + b.layakMalamHours;
                 const wPaidM = parseFloat(b.totalWeekMoney);
 
                 totalDefisitHours += wDefisit;
                 totalTakLayakHours += wTakLayakH;
                 totalTakLayakMoney += wTakLayakM;
                 totalLayakHours += wLayakH;
-                totalLayakSiangHours += b.layakSiangHours;
+                totalLayakSiangHours += (b.surplusHours || 0) + b.layakSiangHours;
                 totalLayakMalamHours += b.layakMalamHours;
+
+                const statusSurplusOrDeficit = b.hasSurplus 
+                    ? `<span class="text-emerald-700 font-bold">+${b.surplusHours}j (Lebihan OT)</span>`
+                    : (wDefisit > 0 ? `<span class="text-red-700 font-bold">${wDefisit} Jam</span>` : "0 Jam");
 
                 p4AuditRowsHtml += `
                 <tr>
                     <td class="font-bold text-center py-2">Minggu ${w + 1} (${b.weekLetter})</td>
                     <td class="text-center font-semibold">${wHakiki} Jam</td>
-                    <td class="text-center text-red-700 font-bold">${wDefisit} Jam</td>
+                    <td class="text-center">${statusSurplusOrDeficit}</td>
                     <td class="text-center font-semibold">${wGross} Jam${b.mark}</td>
                     <td class="text-center text-red-700 font-bold">${wTakLayakH > 0 ? `${wTakLayakH} Jam (RM ${wTakLayakM.toFixed(2)})` : "-"}</td>
-                    <td class="text-center text-emerald-800 font-bold">${wLayakH} Jam <span class="text-[7.5pt] font-normal text-slate-500">(${b.layakSiangHours}j S + ${b.layakMalamHours}j M)</span></td>
+                    <td class="text-center text-emerald-800 font-bold">${wLayakH} Jam <span class="text-[7.5pt] font-normal text-slate-500">(${b.surplusHours ? `${b.surplusHours}j Lebihan + ` : ""}${b.layakSiangHours}j S + ${b.layakMalamHours}j M)</span></td>
                     <td class="text-center font-black text-blue-900">RM ${wPaidM.toFixed(2)}</td>
                 </tr>`;
             }
@@ -1289,42 +1359,114 @@
         }
 
         function generateElmDetailRowsHtml(b) {
-            const hasMalam = (b.layakMalamHours > 0);
-            const rowspan = hasMalam ? "3" : "2";
-
-            let html = `
-            <tr>
-                <td rowspan="${rowspan}" class="text-left pl-2 font-semibold">
-                    (${b.weekLetter}) ${b.netKlm} Jam${b.mark}<br>
-                    <span class="text-[7.5pt] text-slate-600 font-normal">KLM pada ${b.datesStr}</span><br>
-                    <span class="text-[7.5pt] text-rose-700 font-bold">(tak layak ELM ${b.takLayakHours} Jam)</span>
-                </td>
-                <td rowspan="2" class="font-bold bg-slate-50">HBB</td>
-                <td rowspan="2" class="font-bold bg-slate-50">Siang</td>
-                <td rowspan="2" class="font-bold bg-slate-50">1.125</td>
-                <td style="font-weight:bold; color:#991b1b;">${b.takLayakHours}</td>
-                <td style="color:#991b1b; font-size:7.5pt;">
-                    ${activeGuard.kadar.toFixed(2)} x 1.125 x ${b.takLayakHours}<br>= RM${b.takLayakMoney} (tak layak)
-                </td>
-            </tr>
-            <tr>
-                <td style="font-weight:bold;">${b.layakSiangHours}</td>
-                <td style="font-weight:bold; font-size:7.5pt;">
-                    ${activeGuard.kadar.toFixed(2)} x 1.125 x ${b.layakSiangHours}<br>= RM${b.layakSiangMoney}
-                </td>
-            </tr>`;
-
-            if (hasMalam) {
+            let html = "";
+            
+            if (b.hasSurplus) {
+                // PART 1: SURPLUS HAKIKI LEBIHAN 45 JAM (SITUASI 2 MUKA SURAT 143)
                 html += `
                 <tr>
+                    <td class="text-left pl-2 font-semibold">
+                        (${b.weekLetter}1) ${b.surplusHours} jam<br>
+                        <span class="text-[7.5pt] text-slate-600 font-normal">(Jumlah jam bekerja melebihi 45 jam)</span>
+                    </td>
                     <td class="font-bold bg-slate-50">HBB</td>
-                    <td class="font-bold bg-slate-50">Malam</td>
-                    <td class="font-bold bg-slate-50">1.25</td>
-                    <td style="font-weight:bold;">${b.layakMalamHours}</td>
+                    <td class="font-bold bg-slate-50">Siang</td>
+                    <td class="font-bold bg-slate-50">1.125</td>
+                    <td style="font-weight:bold;">${b.surplusHours}</td>
                     <td style="font-weight:bold; font-size:7.5pt;">
-                        ${activeGuard.kadar.toFixed(2)} x 1.25 x ${b.layakMalamHours}<br>= RM${b.layakMalamMoney}
+                        = ${activeGuard.kadar.toFixed(2)} x 1.125 x ${b.surplusHours}<br>= RM${b.surplusMoney}
                     </td>
                 </tr>`;
+
+                // PART 2: ARAHAN KLM BERTULIS
+                if (b.netKlm > 0) {
+                    const hasMalam = (b.layakMalamHours > 0);
+                    const rowspan = hasMalam ? "2" : "1";
+                    html += `
+                    <tr>
+                        <td rowspan="${rowspan}" class="text-left pl-2 font-semibold">
+                            (${b.weekLetter}2) ${b.netKlm} Jam${b.mark}<br>
+                            <span class="text-[7.5pt] text-slate-600 font-normal">KLM pada ${b.datesStr}</span>
+                        </td>
+                        <td class="font-bold bg-slate-50">HBB</td>
+                        <td class="font-bold bg-slate-50">Siang</td>
+                        <td class="font-bold bg-slate-50">1.125</td>
+                        <td style="font-weight:bold;">${b.layakSiangHours}</td>
+                        <td style="font-weight:bold; font-size:7.5pt;">
+                            = ${activeGuard.kadar.toFixed(2)} x 1.125 x ${b.layakSiangHours}<br>= RM${b.layakSiangMoney}
+                        </td>
+                    </tr>`;
+
+                    if (hasMalam) {
+                        html += `
+                        <tr>
+                            <td class="font-bold bg-slate-50">HBB</td>
+                            <td class="font-bold bg-slate-50">Malam</td>
+                            <td class="font-bold bg-slate-50">1.25</td>
+                            <td style="font-weight:bold;">${b.layakMalamHours}</td>
+                            <td style="font-weight:bold; font-size:7.5pt;">
+                                = ${activeGuard.kadar.toFixed(2)} x 1.25 x ${b.layakMalamHours}<br>= RM${b.layakMalamMoney}
+                            </td>
+                        </tr>`;
+                    }
+                }
+            } else {
+                // STANDARD DEFICIT WEEK / NO-SURPLUS WEEK
+                const hasMalam = (b.layakMalamHours > 0);
+                const hasTakLayak = (b.takLayakHours > 0);
+                const rowspan = (hasTakLayak ? 1 : 0) + 1 + (hasMalam ? 1 : 0);
+
+                html += `
+                <tr>
+                    <td rowspan="${rowspan}" class="text-left pl-2 font-semibold">
+                        (${b.weekLetter}) ${b.netKlm} Jam${b.mark}<br>
+                        <span class="text-[7.5pt] text-slate-600 font-normal">KLM pada ${b.datesStr}</span><br>
+                        ${hasTakLayak ? `<span class="text-[7.5pt] text-rose-700 font-bold">(tak layak ELM ${b.takLayakHours} Jam)</span>` : ""}
+                    </td>`;
+
+                if (hasTakLayak) {
+                    html += `
+                    <td class="font-bold bg-slate-50">HBB</td>
+                    <td class="font-bold bg-slate-50">Siang</td>
+                    <td class="font-bold bg-slate-50">1.125</td>
+                    <td style="font-weight:bold; color:#991b1b;">${b.takLayakHours}</td>
+                    <td style="color:#991b1b; font-size:7.5pt;">
+                        ${activeGuard.kadar.toFixed(2)} x 1.125 x ${b.takLayakHours}<br>= RM${b.takLayakMoney} (tak layak)
+                    </td>
+                </tr>
+                <tr>
+                    <td class="font-bold bg-slate-50">HBB</td>
+                    <td class="font-bold bg-slate-50">Siang</td>
+                    <td class="font-bold bg-slate-50">1.125</td>
+                    <td style="font-weight:bold;">${b.layakSiangHours}</td>
+                    <td style="font-weight:bold; font-size:7.5pt;">
+                        = ${activeGuard.kadar.toFixed(2)} x 1.125 x ${b.layakSiangHours}<br>= RM${b.layakSiangMoney}
+                    </td>
+                </tr>`;
+                } else {
+                    html += `
+                    <td class="font-bold bg-slate-50">HBB</td>
+                    <td class="font-bold bg-slate-50">Siang</td>
+                    <td class="font-bold bg-slate-50">1.125</td>
+                    <td style="font-weight:bold;">${b.layakSiangHours}</td>
+                    <td style="font-weight:bold; font-size:7.5pt;">
+                        = ${activeGuard.kadar.toFixed(2)} x 1.125 x ${b.layakSiangHours}<br>= RM${b.layakSiangMoney}
+                    </td>
+                </tr>`;
+                }
+
+                if (hasMalam) {
+                    html += `
+                    <tr>
+                        <td class="font-bold bg-slate-50">HBB</td>
+                        <td class="font-bold bg-slate-50">Malam</td>
+                        <td class="font-bold bg-slate-50">1.25</td>
+                        <td style="font-weight:bold;">${b.layakMalamHours}</td>
+                        <td style="font-weight:bold; font-size:7.5pt;">
+                            = ${activeGuard.kadar.toFixed(2)} x 1.25 x ${b.layakMalamHours}<br>= RM${b.layakMalamMoney}
+                        </td>
+                    </tr>`;
+                }
             }
 
             return html;
