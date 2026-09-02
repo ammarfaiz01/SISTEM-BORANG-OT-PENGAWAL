@@ -1,0 +1,1395 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Interaktif Borang Tuntutan Kerja Lebih Masa (Pekeliling JPA)</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap');
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #f1f5f9;
+            color: #0f172a;
+        }
+
+        .mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Printable A4 Forms */
+        .pdf-page {
+            width: 210mm;
+            min-height: 297mm;
+            padding: 18mm 15mm 15mm 15mm;
+            margin: 0 auto 25px auto;
+            background: white;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            border: 1px solid #cbd5e1;
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        /* Official Form Tables */
+        .official-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 7.5pt;
+            line-height: 1.2;
+        }
+
+        .official-table th, .official-table td {
+            border: 1px solid #000000;
+            text-align: center;
+            vertical-align: middle;
+            padding: 3px 2px;
+        }
+
+        .official-table th {
+            font-weight: bold;
+            background-color: #f8fafc;
+        }
+
+        .hrm-box, .hkm-box {
+            background-color: #708238 !important; /* Olive/green matching scanned doc */
+            color: #000000;
+            font-weight: bold;
+        }
+
+        .klm-box {
+            background-color: #fff275 !important; /* Yellow matching scanned doc */
+            color: #000000;
+            font-weight: bold;
+            line-height: 1.15;
+        }
+
+        .interactive-cell {
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .interactive-cell:hover {
+            filter: brightness(0.92);
+            outline: 2px solid #2563eb;
+        }
+
+        @media print {
+            body {
+                background: white !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .pdf-page {
+                box-shadow: none !important;
+                border: none !important;
+                margin: 0 !important;
+                width: 100% !important;
+                min-height: 100% !important;
+                padding: 10mm 12mm !important;
+                page-break-after: always !important;
+            }
+            .pdf-page:last-child {
+                page-break-after: auto !important;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen pb-12">
+
+    <!-- TOP APP BAR -->
+    <header class="bg-gradient-to-r from-slate-900 via-blue-950 to-indigo-950 text-white shadow-lg sticky top-0 z-40 no-print border-b border-blue-800/50">
+        <div class="max-w-7xl mx-auto px-4 py-3 sm:px-6 flex flex-col md:flex-row justify-between items-center gap-3">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center shadow-inner text-amber-300 font-black text-xl border border-blue-400">
+                    <i class="fa-solid fa-calculator"></i>
+                </div>
+                <div>
+                    <h1 class="text-base font-extrabold tracking-tight flex items-center gap-2">
+                        SISTEM PENJANA &amp; PENGIRA OT INTERAKTIF
+                        <span class="bg-amber-400 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded shadow-sm">JPA FORMAT RASMI</span>
+                    </h1>
+                    <p class="text-xs text-blue-200">Isi Syif Dengan Hanya 'Tick' / Pilih, Pengiraan Jam &amp; Duit OT Dijana 100% Automatik</p>
+                </div>
+            </div>
+
+            <!-- Header Quick Actions -->
+            <div class="flex flex-wrap items-center gap-2">
+                <span class="text-[11px] font-semibold text-emerald-300 bg-emerald-950/80 px-2.5 py-1.5 rounded-lg border border-emerald-500/40 flex items-center gap-1.5 shadow-sm" title="Semua data, syif, dan pengiraan anda disimpan secara automatik ke dalam pelayar web anda.">
+                    <i class="fa-solid fa-cloud-arrow-up text-emerald-400"></i> Auto-Save Aktif
+                </span>
+                <button onclick="resetToDefaultSample()" class="bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-black px-3.5 py-2 rounded-lg shadow-md transition flex items-center gap-1.5 border border-amber-300 ring-2 ring-amber-300/40" title="Muat semula contoh data asal ADNAN BIN AWANG (Julai/Ogos 2026)">
+                    <i class="fa-solid fa-file-pdf text-red-700"></i> Reset Contoh Asal PDF
+                </button>
+                <button onclick="window.print()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2 rounded-lg shadow-md transition flex items-center gap-1.5 border border-emerald-500">
+                    <i class="fa-solid fa-print"></i> Cetak Borang (A4)
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN INTERACTIVE WORKSPACE -->
+    <main class="max-w-7xl mx-auto px-4 py-6 sm:px-6">
+
+        <!-- INTERACTIVE CONTROLLER CARD -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 mb-6 no-print">
+            <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 border-b border-slate-100 pb-4 mb-4">
+                <div>
+                    <h2 class="text-base font-black text-slate-900 flex items-center gap-2">
+                        <i class="fa-solid fa-sliders text-blue-600"></i> Panel Kawalan &amp; Pemilihan Pegawai
+                    </h2>
+                    <p class="text-xs text-slate-500">Pilih pegawai, tetapkan bulan tuntutan, dan pilih syif bertugas untuk mengira tuntutan.</p>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-3">
+                    <div>
+                        <label class="text-[11px] font-bold text-slate-600 block mb-1">PILIH ANGGOTA KESELAMATAN:</label>
+                        <select id="guardSelect" onchange="onGuardSelectChange()" class="bg-slate-50 border border-slate-300 text-xs rounded-lg px-3 py-1.5 font-bold text-slate-800 focus:ring-2 focus:ring-blue-500">
+                            <option value="1">1. ADNAN BIN AWANG (Gaji: RM 3,208.19 | Kadar: RM 15.37)</option>
+                            <option value="0">2. MOHD KHAIRUL RIJAL (Gaji: RM 3,146.99 | Kadar: RM 15.08)</option>
+                            <option value="2">3. ANDREW A/L DASS (Gaji: RM 2,459.35 | Kadar: RM 11.79)</option>
+                            <option value="3">4. MIOR SHAHRIL (Gaji: RM 1,989.95 | Kadar: RM 9.54)</option>
+                            <option value="4">5. MUHAMMAD ZAKI (Gaji: RM 1,797.35 | Kadar: RM 8.61)</option>
+                            <option value="5">6. ROSSUWARDI (Gaji: RM 1,989.95 | Kadar: RM 9.54)</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="text-[11px] font-bold text-slate-600 block mb-1">TAHUN:</label>
+                        <select id="yearSelect" onchange="onPeriodConfigChange()" class="bg-slate-50 border border-slate-300 text-xs rounded-lg px-2.5 py-1.5 font-bold text-slate-800 focus:ring-2 focus:ring-blue-500">
+                            <option value="2025">2025</option>
+                            <option value="2026" selected>2026</option>
+                            <option value="2027">2027</option>
+                            <option value="2028">2028</option>
+                            <option value="2029">2029</option>
+                            <option value="2030">2030</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="text-[11px] font-bold text-slate-600 block mb-1">BULAN TUNTUTAN:</label>
+                        <select id="monthSelect" onchange="onPeriodConfigChange()" class="bg-slate-50 border border-slate-300 text-xs rounded-lg px-3 py-1.5 font-bold text-slate-800 focus:ring-2 focus:ring-blue-500">
+                            <option value="1">JANUARI</option>
+                            <option value="2">FEBRUARI</option>
+                            <option value="3">MAC</option>
+                            <option value="4">APRIL</option>
+                            <option value="5">MEI</option>
+                            <option value="6">JUN</option>
+                            <option value="7" selected>JULAI</option>
+                            <option value="8">OGOS</option>
+                            <option value="9">SEPTEMBER</option>
+                            <option value="10">OKTOBER</option>
+                            <option value="11">NOVEMBER</option>
+                            <option value="12">DISEMBER</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="text-[11px] font-bold text-slate-600 block mb-1">TARIKH MULA (ISNIN):</label>
+                        <input type="date" id="startDatePicker" onchange="onCustomStartDateChange()" value="2026-07-06" class="bg-slate-50 border border-slate-300 text-xs rounded-lg px-2.5 py-1 font-bold text-slate-800 focus:ring-2 focus:ring-blue-500">
+                    </div>
+
+                    <div class="pt-4 sm:pt-0">
+                        <button onclick="resetAllShifts()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold px-3 py-1.5 rounded-lg border border-slate-300 transition flex items-center gap-1">
+                            <i class="fa-solid fa-rotate-left"></i> Reset Syif
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Officer Profile Details (Editable) -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 text-xs bg-slate-50/70 p-3 rounded-xl border border-slate-200 mb-4">
+                <div>
+                    <span class="text-slate-500 text-[10.5px] block font-semibold">Nama Pegawai:</span>
+                    <input type="text" id="profName" oninput="updateProfileLive()" class="w-full bg-white border border-slate-300 rounded px-2 py-1 font-bold text-slate-900 text-xs">
+                </div>
+                <div>
+                    <span class="text-slate-500 text-[10.5px] block font-semibold">No. Kad Pengenalan:</span>
+                    <input type="text" id="profNokp" oninput="updateProfileLive()" class="w-full bg-white border border-slate-300 rounded px-2 py-1 font-semibold text-slate-900 text-xs">
+                </div>
+                <div>
+                    <span class="text-slate-500 text-[10.5px] block font-semibold">Gaji Pokok (RM):</span>
+                    <input type="number" step="0.01" id="profGaji" oninput="onGajiChangeLive()" class="w-full bg-white border border-slate-300 rounded px-2 py-1 font-bold text-slate-900 text-xs">
+                </div>
+                <div>
+                    <span class="text-slate-500 text-[10.5px] block font-semibold">Kadar Sejam (RM):</span>
+                    <input type="text" id="profKadar" readonly class="w-full bg-slate-100 border border-slate-300 rounded px-2 py-1 font-black text-blue-700 text-xs">
+                </div>
+                <div>
+                    <span class="text-slate-500 text-[10.5px] block font-semibold">Had Siling 1/3 Gaji:</span>
+                    <input type="text" id="profSiling" readonly class="w-full bg-slate-100 border border-slate-300 rounded px-2 py-1 font-black text-rose-700 text-xs">
+                </div>
+                <div>
+                    <span class="text-slate-500 text-[10.5px] block font-semibold">No. Gaji / Pusat:</span>
+                    <input type="text" id="profNoGaji" oninput="updateProfileLive()" class="w-full bg-white border border-slate-300 rounded px-2 py-1 font-semibold text-slate-900 text-xs">
+                </div>
+            </div>
+
+            <!-- LIVE OT SUMMARY BADGES -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3">
+                <div class="bg-blue-50 border border-blue-200 rounded-xl p-3 text-center">
+                    <span class="text-[11px] font-bold text-blue-800 uppercase">Jumlah Jam Hakiki</span>
+                    <div class="text-xl font-black text-blue-950 mt-0.5" id="sumHakikiHours">160 Jam</div>
+                    <span class="text-[10px] text-blue-600" id="sumDeficitHours">Defisit: -20 Jam (45j x 4 = 180j)</span>
+                </div>
+                <div class="bg-amber-50 border border-amber-300 rounded-xl p-3 text-center">
+                    <span class="text-[11px] font-bold text-amber-800 uppercase">Jumlah Arahan KLM</span>
+                    <div class="text-xl font-black text-amber-950 mt-0.5" id="sumKlmGrossHours">74 Jam</div>
+                    <span class="text-[10px] text-amber-700">8* + 24** + 34*** + 8****</span>
+                </div>
+                <div class="bg-purple-50 border border-purple-200 rounded-xl p-3 text-center">
+                    <span class="text-[11px] font-bold text-purple-800 uppercase">KLM Layak Tolak Rehat</span>
+                    <div class="text-xl font-black text-purple-950 mt-0.5" id="sumKlmNetHours">65 Jam</div>
+                    <span class="text-[10px] text-purple-600">Ditolak Waktu Rehat</span>
+                </div>
+                <div class="bg-emerald-50 border border-emerald-300 rounded-xl p-3 text-center">
+                    <span class="text-[11px] font-bold text-emerald-800 uppercase">Jumlah ELM Layak Dibayar</span>
+                    <div class="text-2xl font-black text-emerald-950 mt-0.5" id="sumElmMoney">RM 803.07</div>
+                    <span class="text-[10px] text-emerald-700 font-bold" id="sumCeilingStatus">ðŸŸ¢ 100% Lulus Siling 1/3</span>
+                </div>
+                <div class="bg-slate-100 border border-slate-300 rounded-xl p-3 text-center col-span-2 sm:col-span-1">
+                    <span class="text-[11px] font-bold text-slate-700 uppercase">Cara Cepat Isi:</span>
+                    <p class="text-[10.5px] text-slate-600 mt-1 leading-snug">Klik mana-mana sel pada <strong>Jadual di Bawah</strong> untuk tukar Syif Hakiki atau OT secara pantas!</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- =================================================================== -->
+        <!-- DOCUMENT PREVIEW (EXACT REPLICA OF THE 3-PAGE USER PDF)             -->
+        <!-- =================================================================== -->
+
+        <!-- PAGE 1: JADUAL TUNTUTAN KERJA LEBIH MASA (4 MINGGU) -->
+        <div class="pdf-page" id="page1Print">
+            
+            <div class="text-center font-bold text-[10.5pt] mb-3 leading-tight uppercase tracking-wide">
+                BORANG TUNTUTAN KERJA LEBIH MASA BAGI BULAN <span id="lblMonthHeader">JULAI 2026 / OGOS 2026</span>
+            </div>
+
+            <!-- Maklumat Pegawai Grid -->
+            <div class="grid grid-cols-2 gap-x-4 gap-y-1 text-[8pt] font-bold mb-3 border-b border-black pb-2 leading-tight">
+                <div>NAMA : <span class="font-normal" id="docName">ADNAN BIN AWANG</span></div>
+                <div>JAWATAN : <span class="font-normal" id="docJawatan">PEMBANTU KESELAMATAN KP1</span></div>
+                <div>KADAR SATU JAM : <span class="font-normal">RM <span id="docKadar">15.37</span></span></div>
+                <div>NO K/P : <span class="font-normal" id="docNokp">690901035173</span></div>
+                <div>KADAR 1/3 GAJI : <span class="font-normal">RM <span id="docSiling">1069.40</span></span></div>
+                <div>NO.PUSAT PEMBAYAR : <span class="font-normal" id="docPusat">8041</span></div>
+                <div>GAJI POKOK : <span class="font-normal">RM <span id="docGaji">3,208.19</span></span></div>
+                <div>AKAUN BANK : <span class="font-normal" id="docAkaun">153010081830</span></div>
+                <div>ELAUN MEMANGKU : <span class="font-normal">-</span></div>
+                <div>NAMA BANK : <span class="font-normal" id="docBank">MAYBANK BERHAD</span></div>
+                <div>NO.GAJI : <span class="font-normal" id="docNoGaji">20000744</span></div>
+                <div>NO TEL : <span class="font-normal" id="docTel">013-9409546</span></div>
+            </div>
+
+            <!-- TABLE 4 MINGGU -->
+            <table class="official-table mb-4" id="tableWeekSchedule">
+                <thead>
+                    <tr>
+                        <th rowspan="2" style="width: 14%;">Hari<br>Minggu</th>
+                        <th style="width: 10%;">1</th>
+                        <th style="width: 10%;">2</th>
+                        <th style="width: 10%;">3</th>
+                        <th style="width: 10%;">4</th>
+                        <th style="width: 10%;">5</th>
+                        <th style="width: 10%;">6</th>
+                        <th style="width: 10%;">7</th>
+                        <th rowspan="2" style="width: 11%;">Jumlah Jam<br>Bekerja<br>Seminggu</th>
+                        <th rowspan="2" style="width: 11%;">Kerja<br>Lebih<br>Masa<br>(jam)</th>
+                    </tr>
+                    <tr>
+                        <th>Isnin</th>
+                        <th>Selasa</th>
+                        <th>Rabu</th>
+                        <th>Khamis</th>
+                        <th>Jumaat</th>
+                        <th>Sabtu</th>
+                        <th>Ahad</th>
+                    </tr>
+                </thead>
+                <tbody id="tableWeekBody">
+                    <!-- Injected via JS -->
+                </tbody>
+            </table>
+
+            <div class="text-[7.5pt] text-slate-500 italic text-right no-print">
+                * Klik mana-mana kotak di atas untuk menukar syif atau menambah OT bagi tarikh berkenaan.
+            </div>
+        </div>
+
+        <!-- PAGE 2: PENGIRAAN JUMLAH JAM & ELM (BAHAGIAN 1) -->
+        <div class="pdf-page" id="page2Print">
+            
+            <table class="official-table mb-4">
+                <tbody>
+                    <tr>
+                        <td class="font-bold text-left pl-2 bg-slate-100" style="width: 40%;">Kiraan Jumlah Jam Bekerja</td>
+                        <td class="text-left pl-2" style="width: 60%;" id="p2RowCalcWorkHours">40 + 40 + 40 + 40 = 160 Jam – 180Jam = (-20Jam)</td>
+                    </tr>
+                    <tr>
+                        <td class="font-bold text-left pl-2 bg-slate-100">Purata jam bekerja seminggu</td>
+                        <td class="text-left pl-2" id="p2RowAvgHours">160 Jam / 4 = 40 Jam</td>
+                    </tr>
+                    <tr>
+                        <td class="font-bold text-left pl-2 bg-slate-100">Jumlah KLM</td>
+                        <td class="text-left pl-2 font-bold" id="p2RowSumKlm">= 8*+24**+34***+8**** = 74 Jam</td>
+                    </tr>
+                    <tr>
+                        <td class="font-bold text-left pl-2 bg-slate-100">Jumlah KLM yang layak ELM setelah ditolak dengan tempoh rehat (KLM sebenar)</td>
+                        <td class="text-left pl-2" id="p2RowNetKlm">
+                            (a) 8 Jam – 1 Jam* = 7 Jam<br>
+                            (b) 24 Jam – 3 Jam** = 21 Jam<br>
+                            (c) 34 Jam- 4Jam*** = 30 Jam<br>
+                            (d) 8 Jam – 1 Jam**** = 7 Jam
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="font-bold text-left pl-2 bg-slate-100">Jumlah ELM yang layak dibayar</td>
+                        <td class="text-left pl-2" id="p2RowFormulaElm">
+                            (a) [15.37 x pekali HBB x 7 jam]*<br>
+                            (b) [15.37 x pekali HBB x 21 jam]**<br>
+                            (c) [15.37 x pekali HBB x 30 jam]***<br>
+                            (d) [15.37 x pekali HR x 7 jam]****
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- TABLE PENGIRAAN ELM -->
+            <div class="text-center font-bold text-[9pt] bg-slate-100 border border-black py-1 mb-0">
+                Pengiraan ELM
+            </div>
+            <table class="official-table mb-4">
+                <tbody>
+                    <tr>
+                        <td class="font-bold text-left pl-2" style="width: 35%;">Kadar Sejam</td>
+                        <td class="text-left pl-2" style="width: 65%;" id="p2KadarFormula">
+                            = RM3208.19. x 12 / (313 x 8)<br>
+                            = RM 15.37
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <table class="official-table" id="tableElmBreakdownP2">
+                <thead>
+                    <tr class="bg-slate-100">
+                        <th style="width: 40%;">Tempoh dan masa KLM</th>
+                        <th colspan="2" style="width: 25%;">Pekali</th>
+                        <th style="width: 15%;">Jumlah KLM (jam)</th>
+                        <th style="width: 20%;">ELM</th>
+                    </tr>
+                </thead>
+                <tbody id="bodyElmBreakdownP2">
+                    <!-- Week 1 (a) & Week 2 (b) injected via JS -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- PAGE 3: PENGIRAAN JUMLAH JAM & ELM (BAHAGIAN 2) -->
+        <div class="pdf-page" id="page3Print">
+            
+            <table class="official-table mb-4" id="tableElmBreakdownP3">
+                <thead>
+                    <tr class="bg-slate-100">
+                        <th style="width: 40%;">Tempoh dan masa KLM</th>
+                        <th colspan="2" style="width: 25%;">Pekali</th>
+                        <th style="width: 15%;">Jumlah KLM (jam)</th>
+                        <th style="width: 20%;">ELM</th>
+                    </tr>
+                </thead>
+                <tbody id="bodyElmBreakdownP3">
+                    <!-- Week 3 (c) & Week 4 (d) injected via JS -->
+                </tbody>
+                <tfoot>
+                    <tr class="font-bold bg-slate-100">
+                        <td colspan="4" class="text-right pr-3 py-2 text-[9pt]">Jumlah ELM yang layak dibayar</td>
+                        <td class="font-black text-[10pt] py-2" id="docTotalElmPaid">RM 803.07</td>
+                    </tr>
+                </tfoot>
+            </table>
+
+            <!-- NOTA RASMI KERAJAAN -->
+            <div class="border border-black p-2.5 text-[7.5pt] leading-normal bg-slate-50 mb-6">
+                <strong>Nota:</strong> Sekiranya jumlah waktu bekerja seminggu secara purata telah dibuat pada minggu-minggu tertentu, maka minggu-minggu tertentu tersebut tidak boleh diambil kira bagi perhitungan jumlah jam bekerja bagi minggu-minggu yang lain.<br>
+                KLM yang boleh dipertimbangkan ELM adalah tempoh masa KLM sebenar tidak termasuk masa makan, solat dan lain-lain yang tidak berkaitan dengan tugas.
+            </div>
+
+            <!-- TANDATANGAN & PENGESAHAN -->
+            <table style="width: 100%; border-collapse: collapse; text-align: center; font-size: 8pt; margin-top: 30px;">
+                <tr>
+                    <td style="width: 33%; border: none;">
+                        Disediakan Oleh:<br><br><br><br>
+                        ____________________________<br>
+                        <strong>(<span id="signGuardName">ADNAN BIN AWANG</span>)</strong><br>
+                        <span class="text-[7.5pt]">Pembantu Keselamatan KP1</span>
+                    </td>
+                    <td style="width: 33%; border: none;">
+                        Disemak Oleh:<br><br><br><br>
+                        ____________________________<br>
+                        <strong>(TAMIL ARASI A/P SAMINAITHAN)</strong><br>
+                        <span class="text-[7.5pt]">Pen. Peg. Tadbir Kanan N6</span>
+                    </td>
+                    <td style="width: 33%; border: none;">
+                        Diluluskan Oleh:<br><br><br><br>
+                        ____________________________<br>
+                        <strong>(MOHD REZWAN BIN KELWON)</strong><br>
+                        <span class="text-[7.5pt]">Jurutera Mekanikal J10</span>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+    </main>
+
+    <!-- =================================================================== -->
+    <!-- MODAL POPUP: INTERACTIVE SHIFT & KLM SELECTOR                       -->
+    <!-- =================================================================== -->
+    <div id="editShiftModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 no-print">
+        <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-150">
+            <div class="bg-gradient-to-r from-blue-900 to-indigo-900 text-white px-5 py-3.5 flex justify-between items-center">
+                <div>
+                    <h3 class="font-bold text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-calendar-day text-amber-400"></i> Penetapan Syif &amp; Arahan OT (KLM)
+                    </h3>
+                    <p class="text-[11px] text-blue-200" id="modalDateTitle">Tarikh: 10/07/2026 (Jumaat - Minggu 1)</p>
+                </div>
+                <button onclick="closeEditModal()" class="text-white/80 hover:text-white text-lg font-bold">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="p-5 space-y-4 max-h-[80vh] overflow-y-auto">
+                
+                <!-- LIVE STATUS PENUGASAN BADGE -->
+                <div class="bg-blue-50 border border-blue-200 rounded-xl p-3 flex items-center justify-between">
+                    <div>
+                        <span class="text-[10px] font-extrabold text-blue-800 uppercase tracking-wider block">Ringkasan Penugasan Harian:</span>
+                        <div class="text-xs font-bold text-slate-800 mt-0.5" id="modalLiveSummaryText">
+                            Syif Hakiki: <span class="text-blue-700">Malam (8j)</span> | OT: <span class="text-amber-700">Tiada OT</span>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-[10px] text-slate-500 font-semibold block">Jumlah Jam:</span>
+                        <span class="text-sm font-black text-blue-950" id="modalLiveHoursText">8 Jam</span>
+                    </div>
+                </div>
+
+                <!-- 1. PILIH SYIF HAKIKI -->
+                <div>
+                    <label class="text-xs font-bold text-slate-800 uppercase block mb-2">
+                        1. Pilih Syif Hakiki (8 Jam / Cuti Rehat):
+                    </label>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                        <button type="button" onclick="setModalHakiki('8 Jam\n12.00 Am – 8.00Am', 8, 'MALAM')" id="btnHakiki_M" class="p-2.5 rounded-lg border text-left font-bold transition hover:bg-indigo-50 border-slate-300">
+                            ðŸŒ™ Malam (8j)<br><span class="text-[10px] font-normal text-slate-500">12.00 Am – 8.00 Am</span>
+                        </button>
+                        <button type="button" onclick="setModalHakiki('8 Jam\n8.00 Am – 4.00 Pm', 8, 'PAGI')" id="btnHakiki_P" class="p-2.5 rounded-lg border text-left font-bold transition hover:bg-blue-50 border-slate-300">
+                            â˜€ï¸ Pagi (8j)<br><span class="text-[10px] font-normal text-slate-500">8.00 Am – 4.00 Pm</span>
+                        </button>
+                        <button type="button" onclick="setModalHakiki('8 Jam\n4.00 Pm – 12.00 Am', 8, 'PETANG')" id="btnHakiki_PT" class="p-2.5 rounded-lg border text-left font-bold transition hover:bg-amber-50 border-slate-300">
+                            ðŸŒ† Petang (8j)<br><span class="text-[10px] font-normal text-slate-500">4.00 Pm – 12.00 Am</span>
+                        </button>
+                        <button type="button" onclick="setModalHakiki('-', 0, 'NONE')" id="btnHakiki_NONE" class="p-2.5 rounded-lg border text-left font-bold transition hover:bg-slate-100 border-slate-300 text-slate-700">
+                            ðŸš« Tiada Syif (-)<br><span class="text-[10px] font-normal text-slate-500">Tiada Jam Hakiki (0j)</span>
+                        </button>
+                        <button type="button" onclick="setModalHakiki('HRM', 0, 'HRM')" id="btnHakiki_HRM" class="p-2.5 rounded-lg border text-left font-black transition bg-olive-100 hover:bg-emerald-100 border-slate-300 text-emerald-950">
+                            ðŸŒ¿ HRM<br><span class="text-[10px] font-normal text-slate-600">Rehat Mingguan</span>
+                        </button>
+                        <button type="button" onclick="setModalHakiki('HKM', 0, 'HKM')" id="btnHakiki_HKM" class="p-2.5 rounded-lg border text-left font-black transition bg-olive-100 hover:bg-emerald-100 border-slate-300 text-emerald-950">
+                            ðŸŒ¿ HKM<br><span class="text-[10px] font-normal text-slate-600">Kelepasan Mingguan</span>
+                        </button>
+                        <button type="button" onclick="setModalHakiki('HKA', 0, 'HKA')" id="btnHakiki_HKA" class="p-2.5 rounded-lg border text-left font-black transition bg-rose-50 hover:bg-rose-100 border-rose-300 text-rose-950">
+                            ðŸ”´ HKA<br><span class="text-[10px] font-normal text-rose-700">Cuti Kelepasan Am</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 2. PILIH ARAHAN KERJA LEBIH MASA (KLM / OT) -->
+                <div>
+                    <label class="text-xs font-bold text-slate-800 uppercase block mb-1">
+                        2. Pilih Arahan Kerja Lebih Masa (KLM / OT):
+                    </label>
+                    <span class="text-[10.5px] text-slate-500 block mb-2">Masa syif OT sama tepat dengan masa syif biasa berserta pilihan sambung/double syif:</span>
+                    
+                    <div class="space-y-2.5">
+                        <!-- Single OT Shifts -->
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                            <button type="button" onclick="setModalKlm('', 0, 0, 0)" id="btnKlm_NONE" class="p-2 rounded-lg border text-left font-semibold hover:bg-slate-100 border-slate-300 flex items-center justify-center">
+                                ðŸš« Tiada OT
+                            </button>
+                            <button type="button" onclick="setModalKlm('8 Jam\n8.00 Am – 4.00 Pm', 8, 7, 0)" id="btnKlm_8S" class="p-2 rounded-lg border text-left font-bold bg-amber-50 hover:bg-amber-100 border-amber-300 text-amber-950">
+                                â˜€ï¸ OT Pagi (8j)<br><span class="text-[9.5px] font-normal text-amber-900">8.00 Am – 4.00 Pm</span>
+                            </button>
+                            <button type="button" onclick="setModalKlm('8 Jam\n4.00 Pm – 12.00 Am', 8, 5, 2)" id="btnKlm_8P" class="p-2 rounded-lg border text-left font-bold bg-amber-50 hover:bg-amber-100 border-amber-300 text-amber-950">
+                                ðŸŒ† OT Petang (8j)<br><span class="text-[9.5px] font-normal text-amber-900">4.00 Pm – 12.00 Am</span>
+                            </button>
+                            <button type="button" onclick="setModalKlm('8 Jam\n12.00 Am – 8.00 Am', 8, 2, 5)" id="btnKlm_8M" class="p-2 rounded-lg border text-left font-bold bg-amber-50 hover:bg-amber-100 border-amber-300 text-amber-950">
+                                ðŸŒ™ OT Malam (8j)<br><span class="text-[9.5px] font-normal text-amber-900">12.00 Am – 8.00 Am</span>
+                            </button>
+                        </div>
+
+                        <!-- Double & Extended OT Shifts -->
+                        <div class="bg-amber-50/50 p-2.5 rounded-xl border border-amber-200">
+                            <span class="text-[10px] font-extrabold text-amber-900 uppercase block mb-1.5">Pilihan Double Shift / Sambung Waktu (16 Jam / 10 Jam / 6 Jam):</span>
+                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
+                                <button type="button" onclick="setModalKlm('16 Jam\n12.00 Am – 8.00 Am\n4.00 Pm – 12.00 Am', 16, 7, 7)" id="btnKlm_16_M_PT" class="p-2 rounded-lg border text-left font-bold bg-white hover:bg-amber-100 border-amber-300 text-amber-950">
+                                    ⚡ Malam + Petang (16j)<br><span class="text-[9px] font-normal text-amber-800 leading-tight block">12.00 Am–8.00 Am<br>4.00 Pm–12.00 Am</span>
+                                </button>
+                                <button type="button" onclick="setModalKlm('16 Jam\n12.00 Am – 8.00 Am\n8.00 Am – 4.00 Pm', 16, 9, 5)" id="btnKlm_16_M_P" class="p-2 rounded-lg border text-left font-bold bg-white hover:bg-amber-100 border-amber-300 text-amber-950">
+                                    ⚡ Malam + Pagi (16j)<br><span class="text-[9px] font-normal text-amber-800 leading-tight block">12.00 Am–8.00 Am<br>8.00 Am–4.00 Pm</span>
+                                </button>
+                                <button type="button" onclick="setModalKlm('16 Jam\n8.00 Am – 4.00 Pm\n4.00 Pm – 12.00 Am', 16, 12, 2)" id="btnKlm_16_P_PT" class="p-2 rounded-lg border text-left font-bold bg-white hover:bg-amber-100 border-amber-300 text-amber-950">
+                                    ⚡ Pagi + Petang (16j)<br><span class="text-[9px] font-normal text-amber-800 leading-tight block">8.00 Am–4.00 Pm<br>4.00 Pm–12.00 Am</span>
+                                </button>
+                                <button type="button" onclick="setModalKlm('16 Jam\n4.00 Pm – 12.00 Am\n12.00 Am – 8.00 Am', 16, 5, 9)" id="btnKlm_16_PT_M" class="p-2 rounded-lg border text-left font-bold bg-white hover:bg-amber-100 border-amber-300 text-amber-950">
+                                    ⚡ Petang + Malam (16j)<br><span class="text-[9px] font-normal text-amber-800 leading-tight block">4.00 Pm–12.00 Am<br>12.00 Am–8.00 Am</span>
+                                </button>
+                                <button type="button" onclick="setModalKlm('10 Jam\n8.00Am – 18.00Pm', 10, 9, 0)" id="btnKlm_10" class="p-2 rounded-lg border text-left font-bold bg-white hover:bg-amber-100 border-amber-300 text-amber-950">
+                                    â±ï¸ OT 10 Jam (Siang)<br><span class="text-[9.5px] font-normal text-amber-800">8.00 Am – 6.00 Pm</span>
+                                </button>
+                                <button type="button" onclick="setModalKlm('6 Jam\n6.00 Pm – 12.00 Am', 6, 4, 2)" id="btnKlm_6" class="p-2 rounded-lg border text-left font-bold bg-white hover:bg-amber-100 border-amber-300 text-amber-950">
+                                    â±ï¸ OT 6 Jam (Petang)<br><span class="text-[9.5px] font-normal text-amber-800">6.00 Pm – 12.00 Am</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Custom KLM Details -->
+                <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs">
+                    <span class="font-bold text-slate-700 block mb-1">Keterangan Tambahan / Custom Waktu OT:</span>
+                    <input type="text" id="modalCustomKlmText" oninput="onModalCustomKlmInput()" placeholder="Contoh: 8 Jam (8.00 Am - 4.00 Pm)" class="w-full bg-white border border-slate-300 rounded px-2.5 py-1.5 font-medium text-xs">
+                </div>
+
+            </div>
+
+            <div class="bg-slate-50 px-5 py-3 border-t border-slate-200 flex justify-between items-center">
+                <span class="text-[11px] text-slate-500 italic">Pilih syif di atas kemudian tekan Simpan.</span>
+                <div class="flex gap-2">
+                    <button type="button" onclick="closeEditModal()" class="px-4 py-1.5 text-xs font-semibold rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-700">
+                        Batal
+                    </button>
+                    <button type="button" onclick="saveModalShift()" class="px-5 py-1.5 text-xs font-bold rounded-lg bg-blue-600 hover:bg-blue-700 text-white shadow flex items-center gap-1.5">
+                        <i class="fa-solid fa-check"></i> Simpan &amp; Kira Semula
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- JAVASCRIPT APP LOGIC & AUTO-CALCULATION ENGINE                      -->
+    <!-- =================================================================== -->
+    <script>
+        // 1. DATA MASTER PEGAWAI KESELAMATAN
+        const GUARDS_LIST = [
+            {
+                id: 0,
+                name: "MOHD KHAIRUL RIJAL BIN KASIM",
+                jawatan: "PEMBANTU KESELAMATAN KP1",
+                nokp: "800612015883",
+                gaji: 3146.99,
+                kadar: 15.08,
+                siling: 1049.00,
+                nogaji: "07571656",
+                pusat: "8041",
+                bank: "MAYBANK BERHAD",
+                akaun: "155023280669",
+                tel: "013 - 3722517"
+            },
+            {
+                id: 1,
+                name: "ADNAN BIN AWANG",
+                jawatan: "PEMBANTU KESELAMATAN KP1",
+                nokp: "690901035173",
+                gaji: 3208.19,
+                kadar: 15.37,
+                siling: 1069.40,
+                nogaji: "20000744",
+                pusat: "8041",
+                bank: "MAYBANK BERHAD",
+                akaun: "153010081830",
+                tel: "013-9409546"
+            },
+            {
+                id: 2,
+                name: "ANDREW A/L DASS",
+                jawatan: "PEMBANTU KESELAMATAN KP1",
+                nokp: "910701085469",
+                gaji: 2459.35,
+                kadar: 11.79,
+                siling: 819.78,
+                nogaji: "20601977",
+                pusat: "8041",
+                bank: "MAYBANK BERHAD",
+                akaun: "108039104122",
+                tel: "016 - 5432109"
+            },
+            {
+                id: 3,
+                name: "MIOR SHAHRIL BIN ZAINUDDIN",
+                jawatan: "PEMBANTU KESELAMATAN KP1",
+                nokp: "900315065073",
+                gaji: 1989.95,
+                kadar: 9.54,
+                siling: 663.32,
+                nogaji: "00231868",
+                pusat: "8041",
+                bank: "MAYBANK BERHAD",
+                akaun: "158025038409",
+                tel: "017 - 8765432"
+            },
+            {
+                id: 4,
+                name: "MUHAMMAD ZAKI BIN ABU BAKAR",
+                jawatan: "PEMBANTU KESELAMATAN KP1",
+                nokp: "870217105719",
+                gaji: 1797.35,
+                kadar: 8.61,
+                siling: 599.12,
+                nogaji: "00296884",
+                pusat: "8041",
+                bank: "PUBLIC BANK BERHAD",
+                akaun: "4738717504",
+                tel: "011 - 23456789"
+            },
+            {
+                id: 5,
+                name: "ROSSUWARDI BIN RASLI",
+                jawatan: "PEMBANTU KESELAMATAN KP1",
+                nokp: "840826095037",
+                gaji: 1989.95,
+                kadar: 9.54,
+                siling: 663.32,
+                nogaji: "00231861",
+                pusat: "8041",
+                bank: "CIMB BANK BERHAD",
+                akaun: "7609831161",
+                tel: "012 - 3456781"
+            }
+        ];
+
+        // 2. STATE
+        let activeGuard = JSON.parse(JSON.stringify(GUARDS_LIST[1])); // Default Adnan
+        let activePeriod = "2026-07"; // Default Julai/Ogos 2026
+        let weekDates = []; // Array of 4 weeks x 7 days
+        let weekScheduleData = []; // 4 weeks x 7 days objects
+        let activeModalSlot = { w: null, d: null };
+        let tempModalHakiki = { text: "", hours: 0, type: "" };
+        let tempModalKlm = { text: "", grossHours: 0, siangHours: 0, malamHours: 0 };
+
+        // 3. INITIALIZATION
+        document.addEventListener("DOMContentLoaded", () => {
+            const restored = loadFromLocalStorage();
+            if (!restored) {
+                loadOfficialSampleAdnan();
+            }
+        });
+
+        // 4. LOAD SAMPLE DATA EXACTLY MATCHING USER'S PDF (JULAI / OGOS 2026 - ADNAN)
+        function loadOfficialSampleAdnan() {
+            activeGuard = JSON.parse(JSON.stringify(GUARDS_LIST[1]));
+            document.getElementById("guardSelect").value = "1";
+            document.getElementById("yearSelect").value = "2026";
+            document.getElementById("monthSelect").value = "7";
+            document.getElementById("startDatePicker").value = "2026-07-06";
+            
+            updateProfileInputs();
+
+            // 4 Weeks exact dates for July/August 2026 starting 06/07/2026
+            const startD = new Date(2026, 6, 6); // 6 July 2026 (Isnin)
+            generateWeekDates(startD);
+            document.getElementById("lblMonthHeader").textContent = "JULAI 2026 / OGOS 2026";
+
+            // Populate exact shift pattern from PDF:
+            weekScheduleData = [
+                // Week 1
+                [
+                    { hakiki: "8 Jam\n12.00 Am – 8.00Am", hHours: 8, klm: "", kGross: 0, kSiang: 0, kMalam: 0 },
+                    { hakiki: "HRM", hHours: 0, klm: "", kGross: 0, kSiang: 0, kMalam: 0 },
+                    { hakiki: "HKM", hHours: 0, klm: "", kGross: 0, kSiang: 0, kMalam: 0 },
+                    { hakiki: "8 Jam\n4.00 Pm – 12.00 Am", hHours: 8, klm: "", kGross: 0, kSiang: 0, kMalam: 0 },
+                    { hakiki: "8 Jam\n4.00 Pm – 12.00 Am", hHours: 8, klm: "8 Jam\n8.00 Am – 4.00 Pm", kGross: 8, kSiang: 7, kMalam: 0 },
+                    { hakiki: "8 Jam\n8.00 Am – 4.00 Pm", hHours: 8, klm: "", kGross: 0, kSiang: 0, kMalam: 0 },
+                    { hakiki: "8 Jam\n8.00 Am – 4.00 Pm", hHours: 8, klm: "", kGross: 0, kSiang: 0, kMalam: 0 }
+                ],
+                // Week 2:
+                [
+                    { hakiki: "8 Jam\n12.00 Am – 8.00 Am", hHours: 8, klm: "8 Jam\n8.00 Am – 4.00 Pm", kGross: 8, kSiang: 7, kMalam: 0 },
+                    { hakiki: "8 Jam\n12.00 Am - 8.00Am", hHours: 8, klm: "8 Jam\n8.00 Am – 4.00 Pm", kGross: 8, kSiang: 7, kMalam: 0 },
+                    { hakiki: "HRM", hHours: 0, klm: "", kGross: 0, kSiang: 0, kMalam: 0 },
+                    { hakiki: "HKM", hHours: 0, klm: "", kGross: 0, kSiang: 0, kMalam: 0 },
+                    { hakiki: "8 Jam\n4.00 Pm – 12.00 Am", hHours: 8, klm: "", kGross: 0, kSiang: 0, kMalam: 0 },
+                    { hakiki: "8 Jam\n4.00 Pm – 12.00 Am", hHours: 8, klm: "8 Jam\n12.00 Am – 8.00 Am", kGross: 8, kSiang: 2, kMalam: 5 },
+                    { hakiki: "8 Jam\n8.00 Am– 4.00 Pm", hHours: 8, klm: "", kGross: 0, kSiang: 0, kMalam: 0 }
+                ],
+                // Week 3:
+                [
+                    { hakiki: "8 Jam\n8.00 Am– 4.00 Pm", hHours: 8, klm: "", kGross: 0, kSiang: 0, kMalam: 0 },
+                    { hakiki: "8 Jam\n12.00 Am– 8.00 Am", hHours: 8, klm: "16 Jam\n8.00 Am – 12.00 Am", kGross: 16, kSiang: 13, kMalam: 2 },
+                    { hakiki: "8 Jam\n12.00Am – 8.00Am", hHours: 8, klm: "10 Jam\n8.00Am – 18.00Pm", kGross: 10, kSiang: 9, kMalam: 0 },
+                    { hakiki: "HRM", hHours: 0, klm: "", kGross: 0, kSiang: 0, kMalam: 0 },
+                    { hakiki: "HKM", hHours: 0, klm: "", kGross: 0, kSiang: 0, kMalam: 0 },
+                    { hakiki: "8 Jam\n4.00 Pm - 12.00 Am", hHours: 8, klm: "", kGross: 0, kSiang: 0, kMalam: 0 },
+                    { hakiki: "8 Jam\n4.00 Pm - 12.00Am", hHours: 8, klm: "8 Jam\n12.00 Am – 8.00 Am", kGross: 8, kSiang: 0, kMalam: 6 }
+                ],
+                // Week 4:
+                [
+                    { hakiki: "8 Jam\n8.00 Am– 4.00 Pm", hHours: 8, klm: "", kGross: 0, kSiang: 0, kMalam: 0 },
+                    { hakiki: "8 Jam\n8.00 Am– 4.00 Pm", hHours: 8, klm: "", kGross: 0, kSiang: 0, kMalam: 0 },
+                    { hakiki: "8 Jam\n12.00Am – 8.00Am", hHours: 8, klm: "8 Jam\n8.00 Am – 4.00 Pm", kGross: 8, kSiang: 7, kMalam: 0 },
+                    { hakiki: "8 Jam\n12.00Am – 8.00Am", hHours: 8, klm: "", kGross: 0, kSiang: 0, kMalam: 0 },
+                    { hakiki: "HRM", hHours: 0, klm: "", kGross: 0, kSiang: 0, kMalam: 0 },
+                    { hakiki: "HKM", hHours: 0, klm: "", kGross: 0, kSiang: 0, kMalam: 0 },
+                    { hakiki: "8 Jam\n4.00 Pm – 12.00 Am", hHours: 8, klm: "", kGross: 0, kSiang: 0, kMalam: 0 }
+                ]
+            ];
+
+            calculateAndRenderAll();
+        }
+
+        // 5. GENERATE DATES FOR 4 WEEKS (STARTING MONDAY)
+        function generateWeekDates(startMonday) {
+            weekDates = [];
+            for (let w = 0; w < 4; w++) {
+                let week = [];
+                for (let d = 0; d < 7; d++) {
+                    const curDate = new Date(startMonday.getFullYear(), startMonday.getMonth(), startMonday.getDate() + (w * 7 + d));
+                    week.push({
+                        dayNum: curDate.getDate(),
+                        mNum: curDate.getMonth() + 1,
+                        yNum: curDate.getFullYear(),
+                        formatted: `${curDate.getDate()}/${curDate.getMonth() + 1}/${curDate.getFullYear()}`
+                    });
+                }
+                weekDates.push(week);
+            }
+        }
+
+        function updatePeriodHeaderLabel() {
+            if (!weekDates || weekDates.length < 4 || !weekDates[0] || !weekDates[0][0] || !weekDates[3] || !weekDates[3][6]) return;
+            const startD = weekDates[0][0]; // { dayNum, mNum, yNum }
+            const endD = weekDates[3][6];   // { dayNum, mNum, yNum }
+
+            const mNames = ["JANUARI", "FEBRUARI", "MAC", "APRIL", "MEI", "JUN", "JULAI", "OGOS", "SEPTEMBER", "OKTOBER", "NOVEMBER", "DISEMBER"];
+            
+            let headerText = "";
+            if (startD.mNum === endD.mNum && startD.yNum === endD.yNum) {
+                // If all 4 weeks fall inside the same month
+                headerText = `${mNames[startD.mNum - 1]} ${startD.yNum}`;
+            } else if (startD.yNum === endD.yNum) {
+                // Spans across 2 months in same year
+                headerText = `${mNames[startD.mNum - 1]} ${startD.yNum} / ${mNames[endD.mNum - 1]} ${endD.yNum}`;
+            } else {
+                // Spans across year boundary (e.g. 29/12/2025 to 25/01/2026)
+                headerText = `${mNames[startD.mNum - 1]} ${startD.yNum} / ${mNames[endD.mNum - 1]} ${endD.yNum}`;
+            }
+
+            document.getElementById("lblMonthHeader").textContent = headerText;
+        }
+
+        function onPeriodConfigChange() {
+            const y = parseInt(document.getElementById("yearSelect").value);
+            const m = parseInt(document.getElementById("monthSelect").value);
+            
+            // Find first Monday of that period
+            const firstDay = new Date(y, m - 1, 1);
+            const dow = firstDay.getDay(); // 0=Ahd, 1=Isn, 2=Sel, ...
+            let offsetToMon = 0;
+            if (dow === 1) offsetToMon = 0;
+            else if (dow === 0) offsetToMon = 1;
+            else offsetToMon = (8 - dow);
+
+            const startMon = new Date(y, m - 1, 1 + offsetToMon);
+
+            const yyyy = startMon.getFullYear();
+            const mm = String(startMon.getMonth() + 1).padStart(2, '0');
+            const dd = String(startMon.getDate()).padStart(2, '0');
+            document.getElementById("startDatePicker").value = `${yyyy}-${mm}-${dd}`;
+
+            generateWeekDates(startMon);
+            updatePeriodHeaderLabel();
+            calculateAndRenderAll();
+        }
+
+        function onCustomStartDateChange() {
+            const val = document.getElementById("startDatePicker").value;
+            if (!val) return;
+            const [y, m, d] = val.split('-').map(Number);
+            const startMon = new Date(y, m - 1, d);
+            
+            generateWeekDates(startMon);
+            updatePeriodHeaderLabel();
+            calculateAndRenderAll();
+        }
+
+        function onGuardSelectChange() {
+            const idx = parseInt(document.getElementById("guardSelect").value);
+            activeGuard = JSON.parse(JSON.stringify(GUARDS_LIST[idx] || GUARDS_LIST[0]));
+            updateProfileInputs();
+            calculateAndRenderAll();
+        }
+
+        function updateProfileInputs() {
+            document.getElementById("profName").value = activeGuard.name;
+            document.getElementById("profNokp").value = activeGuard.nokp;
+            document.getElementById("profGaji").value = activeGuard.gaji.toFixed(2);
+            document.getElementById("profKadar").value = activeGuard.kadar.toFixed(2);
+            document.getElementById("profSiling").value = activeGuard.siling.toFixed(2);
+            document.getElementById("profNoGaji").value = `${activeGuard.nogaji} / ${activeGuard.pusat}`;
+        }
+
+        function onGajiChangeLive() {
+            const g = parseFloat(document.getElementById("profGaji").value) || 0;
+            activeGuard.gaji = g;
+            activeGuard.kadar = parseFloat(((g * 12) / (313 * 8)).toFixed(2));
+            activeGuard.siling = parseFloat((g / 3).toFixed(2));
+            document.getElementById("profKadar").value = activeGuard.kadar.toFixed(2);
+            document.getElementById("profSiling").value = activeGuard.siling.toFixed(2);
+            calculateAndRenderAll();
+        }
+
+        function updateProfileLive() {
+            activeGuard.name = document.getElementById("profName").value;
+            activeGuard.nokp = document.getElementById("profNokp").value;
+            calculateAndRenderAll();
+        }
+
+        function resetAllShifts() {
+            if (confirm("Adakah anda pasti mahu mengosongkan semua syif & OT?")) {
+                weekScheduleData = Array.from({length: 4}, () => 
+                    Array.from({length: 7}, () => ({
+                        hakiki: "8 Jam\n8.00 Am – 4.00 Pm",
+                        hHours: 8,
+                        klm: "",
+                        kGross: 0,
+                        kSiang: 0,
+                        kMalam: 0
+                    }))
+                );
+                calculateAndRenderAll();
+            }
+        }
+
+        function formatCellContent(raw) {
+            if (!raw) return "-";
+            let text = String(raw).trim();
+            if (text === "HRM" || text === "HKM" || text === "HKA" || text === "-") return text;
+            
+            text = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+            text = text.replace(/–|-/g, '–');
+            
+            // Extract all time intervals like "12.00 Am – 8.00 Am" or "8.00 Am – 4.00 Pm"
+            const timeIntervalRegex = /\d{1,2}(?:\.\d{2})?\s*(?:Am|Pm|am|pm)\s*[–-]\s*\d{1,2}(?:\.\d{2})?\s*(?:Am|Pm|am|pm)/gi;
+            const timeMatches = text.match(timeIntervalRegex);
+            
+            // Extract Jam header e.g. "8 Jam", "16 Jam", "10 Jam", "6 Jam"
+            const jamMatch = text.match(/^(\d+\s*Jam)/i);
+            const header = jamMatch ? jamMatch[1].replace(/(\d+)\s*Jam/i, '$1 Jam') : (text.split('\n')[0] || "");
+
+            if (timeMatches && timeMatches.length >= 2) {
+                // Double shift (2 distinct intervals) e.g. Malam + Petang
+                const t1 = timeMatches[0].trim();
+                const t2 = timeMatches[1].trim();
+                return `<div style="font-weight:bold; font-size:7.5pt; line-height:1.1;">${header}</div><div style="font-size:6.2pt; line-height:1.15; white-space:nowrap; margin-top:1px;">${t1}</div><div style="font-size:6.2pt; line-height:1.15; white-space:nowrap;">${t2}</div>`;
+            } else if (timeMatches && timeMatches.length === 1) {
+                // Single 8 Jam or 10 Jam interval
+                const t = timeMatches[0].trim();
+                const parts = t.split('–').map(p => p.trim());
+                if (parts.length === 2) {
+                    return `<div style="font-weight:bold; font-size:7.5pt; line-height:1.1;">${header}</div><div style="font-size:6.8pt; line-height:1.15;">${parts[0]} –<br>${parts[1]}</div>`;
+                }
+                return `<div style="font-weight:bold; font-size:7.5pt;">${header}</div><div style="font-size:6.8pt;">${t}</div>`;
+            }
+
+            // Fallback for custom text
+            const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+            if (lines.length >= 2) {
+                return `<div style="font-weight:bold; font-size:7.5pt;">${lines[0]}</div><div style="font-size:6.5pt; line-height:1.15;">${lines.slice(1).join('<br>')}</div>`;
+            }
+            return text.replace(/\n/g, '<br>');
+        }
+
+        // =========================================================================
+        // CALCULATION & RENDERING ENGINE (100% PERSIS DOKUMEN RASMI JPA)
+        // =========================================================================
+        function calculateAndRenderAll(shouldSave = true) {
+            // Update Headers in document
+            document.getElementById("docName").textContent = activeGuard.name;
+            document.getElementById("docJawatan").textContent = activeGuard.jawatan;
+            document.getElementById("docKadar").textContent = activeGuard.kadar.toFixed(2);
+            document.getElementById("docNokp").textContent = activeGuard.nokp;
+            document.getElementById("docSiling").textContent = activeGuard.siling.toFixed(2);
+            document.getElementById("docPusat").textContent = activeGuard.pusat;
+            document.getElementById("docGaji").textContent = activeGuard.gaji.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            document.getElementById("docAkaun").textContent = activeGuard.akaun;
+            document.getElementById("docBank").textContent = activeGuard.bank;
+            document.getElementById("docNoGaji").textContent = activeGuard.nogaji;
+            document.getElementById("docTel").textContent = activeGuard.tel;
+            document.getElementById("signGuardName").textContent = activeGuard.name;
+
+            // Render Table Week Schedule (Page 1)
+            let tableHtml = "";
+            let weekHoursList = [];
+            let weekKlmGrossList = [];
+            let weekNetKlmList = [];
+            let weekElmBreakdowns = [];
+            let grandTotalElmMoney = 0;
+
+            const weekMarks = ["*", "**", "***", "****"];
+
+            for (let w = 0; w < 4; w++) {
+                let weekWorkHours = 0;
+                let weekGrossKlm = 0;
+                let dateCells = "";
+                let hakikiCells = "";
+                let klmCells = "";
+
+                let otDates = [];
+                let weekGrossSiang = 0;
+                let weekGrossMalam = 0;
+                let klmSlotsCount = 0;
+
+                for (let d = 0; d < 7; d++) {
+                    const dtInfo = (weekDates[w] && weekDates[w][d]) ? weekDates[w][d] : { formatted: "-" };
+                    const cellData = (weekScheduleData[w] && weekScheduleData[w][d]) ? weekScheduleData[w][d] : { hakiki: "HRM", hHours: 0, klm: "", kGross: 0, kSiang: 0, kMalam: 0 };
+
+                    dateCells += `<td style="font-weight:bold;">${dtInfo.formatted}</td>`;
+
+                    // Hakiki Box
+                    const isOff = (cellData.hakiki === "HRM" || cellData.hakiki === "HKM" || cellData.hakiki === "HKA");
+                    const offCls = isOff ? "hrm-box" : "";
+                    const hakikiFormatted = formatCellContent(cellData.hakiki);
+                    hakikiCells += `<td class="interactive-cell ${offCls}" onclick="openEditModal(${w}, ${d})" title="Klik untuk ubah">${hakikiFormatted}</td>`;
+
+                    if (!isOff && cellData.hHours > 0) {
+                        weekWorkHours += cellData.hHours;
+                    }
+
+                    // KLM Box
+                    if (cellData.kGross > 0) {
+                        weekGrossKlm += cellData.kGross;
+                        weekGrossSiang += cellData.kSiang;
+                        weekGrossMalam += cellData.kMalam;
+                        klmSlotsCount++;
+                        otDates.push(`${dtInfo.dayNum}/${dtInfo.mNum}`);
+
+                        const klmFormatted = formatCellContent(cellData.klm);
+                        klmCells += `<td class="interactive-cell klm-box" onclick="openEditModal(${w}, ${d})" title="Klik untuk ubah">${klmFormatted}</td>`;
+                    } else {
+                        klmCells += `<td class="interactive-cell" onclick="openEditModal(${w}, ${d})" title="Klik untuk tambah OT">-</td>`;
+                    }
+                }
+
+                weekHoursList.push(weekWorkHours);
+                weekKlmGrossList.push(weekGrossKlm);
+
+                // DEDUCTION OF REST HOURS (1 hour deducted per ~8h KLM slot)
+                const restDeduction = (weekGrossKlm === 8) ? 1 : (weekGrossKlm === 24 ? 3 : (weekGrossKlm === 34 ? 4 : (weekGrossKlm === 16 ? 2 : (klmSlotsCount > 0 ? klmSlotsCount : 0))));
+                const netKlm = Math.max(0, weekGrossKlm - restDeduction);
+                weekNetKlmList.push({ gross: weekGrossKlm, rest: restDeduction, net: netKlm, mark: weekMarks[w] });
+
+                // DEFICIT FROM 45 HOURS RULE:
+                // If hakiki hours < 45h (e.g. 40h), deficit (5h) is offset from eligible OT hours!
+                const deficitFrom45 = Math.max(0, 45 - weekWorkHours); // e.g. 5 jam
+
+                // Calculate Siang & Malam Breakdown
+                let netSiang = weekGrossSiang;
+                let netMalam = weekGrossMalam;
+
+                // Subtract 5 hours from siang first (as seen in JPA official calculation)
+                const takLayakSiang = Math.min(deficitFrom45, netSiang);
+                const layakSiang = Math.max(0, netSiang - takLayakSiang);
+                const layakMalam = netMalam;
+
+                const siangMoney = parseFloat((layakSiang * 1.125 * activeGuard.kadar).toFixed(2));
+                const malamMoney = parseFloat((layakMalam * 1.25 * activeGuard.kadar).toFixed(2));
+                const weekTotalElmMoney = siangMoney + malamMoney;
+                grandTotalElmMoney += weekTotalElmMoney;
+
+                const yr2Digit = (weekDates[w] && weekDates[w][0]) ? String(weekDates[w][0].yNum).slice(-2) : "26";
+                weekElmBreakdowns.push({
+                    weekLetter: String.fromCharCode(97 + w),
+                    netKlm: netKlm,
+                    mark: weekMarks[w],
+                    datesStr: otDates.join(", ") + "/" + yr2Digit,
+                    takLayakHours: takLayakSiang,
+                    takLayakMoney: (takLayakSiang * 1.125 * activeGuard.kadar).toFixed(2),
+                    layakSiangHours: layakSiang,
+                    layakSiangMoney: siangMoney.toFixed(2),
+                    layakMalamHours: layakMalam,
+                    layakMalamMoney: malamMoney.toFixed(2),
+                    totalWeekMoney: weekTotalElmMoney.toFixed(2),
+                    grossSiang: weekGrossSiang,
+                    grossMalam: weekGrossMalam
+                });
+
+                const markStr = weekMarks[w];
+                const klmDisplay = (weekGrossKlm > 0) ? `${weekGrossKlm} Jam${markStr}` : "0";
+
+                tableHtml += `
+                <tr>
+                    <td rowspan="2" style="font-weight:bold;">Minggu ${w + 1}</td>
+                    ${dateCells}
+                    <td rowspan="3" style="font-weight:bold; font-size:8.5pt;">${weekWorkHours} Jam</td>
+                    <td rowspan="2"></td>
+                </tr>
+                <tr>
+                    ${hakikiCells}
+                </tr>
+                <tr>
+                    <td style="font-weight:bold;">Arahan KLM (jam)</td>
+                    ${klmCells}
+                    <td style="font-weight:bold; font-size:8.5pt;">${klmDisplay}</td>
+                </tr>`;
+            }
+
+            document.getElementById("tableWeekBody").innerHTML = tableHtml;
+
+            // =================================================================
+            // PAGE 2 & PAGE 3 DETAILED SUMMARY TABLES
+            // =================================================================
+            const sumHakiki4Weeks = weekHoursList.reduce((a, b) => a + b, 0);
+            const deficitTotal = sumHakiki4Weeks - 180;
+            const avgWeekly = (sumHakiki4Weeks / 4).toFixed(0);
+
+            document.getElementById("p2RowCalcWorkHours").textContent = `${weekHoursList.join(" + ")} = ${sumHakiki4Weeks} Jam – 180Jam = (${deficitTotal}Jam)`;
+            document.getElementById("p2RowAvgHours").textContent = `${sumHakiki4Weeks} Jam / 4 = ${avgWeekly} Jam`;
+
+            const sumKlmGrossString = weekKlmGrossList.map((k, idx) => `${k}${weekMarks[idx]}`).join("+");
+            const sumGrossKlmVal = weekKlmGrossList.reduce((a, b) => a + b, 0);
+            document.getElementById("p2RowSumKlm").textContent = `= ${sumKlmGrossString} = ${sumGrossKlmVal} Jam`;
+
+            // Net KLM (Tolak Rehat)
+            let netKlmHtml = "";
+            let formulaElmHtml = "";
+            weekNetKlmList.forEach((item, idx) => {
+                const letter = String.fromCharCode(97 + idx);
+                netKlmHtml += `(${letter}) ${item.gross} Jam – ${item.rest} Jam${item.mark} = <strong>${item.net} Jam</strong><br>`;
+                formulaElmHtml += `(${letter}) [${activeGuard.kadar.toFixed(2)} x pekali HBB x ${item.net} jam]${item.mark}<br>`;
+            });
+            document.getElementById("p2RowNetKlm").innerHTML = netKlmHtml;
+            document.getElementById("p2RowFormulaElm").innerHTML = formulaElmHtml;
+
+            // Kadar Sejam Formula Box
+            document.getElementById("p2KadarFormula").innerHTML = `
+                = RM ${activeGuard.gaji.toFixed(2)} x 12 / (313 x 8)<br>
+                = <strong>RM ${activeGuard.kadar.toFixed(2)}</strong>
+            `;
+
+            // RENDER BREAKDOWN ROWS (PAGE 2: Week 1 & Week 2)
+            let p2BodyHtml = "";
+            for (let i = 0; i < 2; i++) {
+                p2BodyHtml += generateElmDetailRowsHtml(weekElmBreakdowns[i]);
+            }
+            document.getElementById("bodyElmBreakdownP2").innerHTML = p2BodyHtml;
+
+            // RENDER BREAKDOWN ROWS (PAGE 3: Week 3 & Week 4)
+            let p3BodyHtml = "";
+            for (let i = 2; i < 4; i++) {
+                p3BodyHtml += generateElmDetailRowsHtml(weekElmBreakdowns[i]);
+            }
+            document.getElementById("bodyElmBreakdownP3").innerHTML = p3BodyHtml;
+
+            // GRAND TOTAL ELM
+            const grandTotalFormatted = `RM ${grandTotalElmMoney.toFixed(2)}`;
+            document.getElementById("docTotalElmPaid").textContent = grandTotalFormatted;
+
+            // Top Badges
+            document.getElementById("sumHakikiHours").textContent = `${sumHakiki4Weeks} Jam`;
+            document.getElementById("sumDeficitHours").textContent = `Defisit: ${deficitTotal} Jam (45j x 4 = 180j)`;
+            document.getElementById("sumKlmGrossHours").textContent = `${sumGrossKlmVal} Jam`;
+            document.getElementById("sumKlmNetHours").textContent = `${weekNetKlmList.reduce((a,b)=>a+b.net,0)} Jam`;
+            document.getElementById("sumElmMoney").textContent = grandTotalFormatted;
+
+            const isPassedCeiling = (grandTotalElmMoney <= activeGuard.siling);
+            document.getElementById("sumCeilingStatus").innerHTML = isPassedCeiling 
+                ? `<span class="inline-block w-2 h-2 rounded-full bg-emerald-500 mr-1"></span> Lulus Siling 1/3 (RM ${activeGuard.siling.toFixed(2)})` 
+                : `<span class="inline-block w-2 h-2 rounded-full bg-red-500 mr-1"></span> Melebihi Siling 1/3 (RM ${activeGuard.siling.toFixed(2)})`;
+
+            if (shouldSave) {
+                saveToLocalStorage();
+            }
+        }
+
+        function generateElmDetailRowsHtml(b) {
+            const hasMalam = (b.layakMalamHours > 0);
+            const rowspan = hasMalam ? "3" : "2";
+
+            let html = `
+            <tr>
+                <td rowspan="${rowspan}" class="text-left pl-2 font-semibold">
+                    (${b.weekLetter}) ${b.netKlm} Jam${b.mark}<br>
+                    <span class="text-[7.5pt] text-slate-600 font-normal">KLM pada ${b.datesStr}</span><br>
+                    <span class="text-[7.5pt] text-rose-700 font-bold">(tak layak ELM ${b.takLayakHours} Jam)</span>
+                </td>
+                <td rowspan="2" class="font-bold bg-slate-50">HBB</td>
+                <td rowspan="2" class="font-bold bg-slate-50">Siang</td>
+                <td rowspan="2" class="font-bold bg-slate-50">1.125</td>
+                <td style="font-weight:bold; color:#991b1b;">${b.takLayakHours}</td>
+                <td style="color:#991b1b; font-size:7.5pt;">
+                    ${activeGuard.kadar.toFixed(2)} x 1.125 x ${b.takLayakHours}<br>= RM${b.takLayakMoney} (tak layak)
+                </td>
+            </tr>
+            <tr>
+                <td style="font-weight:bold;">${b.layakSiangHours}</td>
+                <td style="font-weight:bold; font-size:7.5pt;">
+                    ${activeGuard.kadar.toFixed(2)} x 1.125 x ${b.layakSiangHours}<br>= RM${b.layakSiangMoney}
+                </td>
+            </tr>`;
+
+            if (hasMalam) {
+                html += `
+                <tr>
+                    <td class="font-bold bg-slate-50">HBB</td>
+                    <td class="font-bold bg-slate-50">Malam</td>
+                    <td class="font-bold bg-slate-50">1.25</td>
+                    <td style="font-weight:bold;">${b.layakMalamHours}</td>
+                    <td style="font-weight:bold; font-size:7.5pt;">
+                        ${activeGuard.kadar.toFixed(2)} x 1.25 x ${b.layakMalamHours}<br>= RM${b.layakMalamMoney}
+                    </td>
+                </tr>`;
+            }
+
+            return html;
+        }
+
+        // =========================================================================
+        // LOCALSTORAGE PERSISTENCE (AUTO-SAVE & RESTORE)
+        // =========================================================================
+        const STORAGE_KEY = "BORANG_OT_PERSISTED_STATE_V2";
+
+        function saveToLocalStorage() {
+            try {
+                const state = {
+                    guardId: document.getElementById("guardSelect").value,
+                    year: document.getElementById("yearSelect").value,
+                    month: document.getElementById("monthSelect").value,
+                    startDate: document.getElementById("startDatePicker").value,
+                    customProfile: activeGuard,
+                    weekScheduleData: weekScheduleData
+                };
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+            } catch (e) {
+                console.warn("Storage error:", e);
+            }
+        }
+
+        function loadFromLocalStorage() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (raw) {
+                    const state = JSON.parse(raw);
+                    if (state && state.weekScheduleData && state.weekScheduleData.length === 4) {
+                        document.getElementById("guardSelect").value = state.guardId || "1";
+                        document.getElementById("yearSelect").value = state.year || "2026";
+                        document.getElementById("monthSelect").value = state.month || "7";
+                        document.getElementById("startDatePicker").value = state.startDate || "2026-07-06";
+                        
+                        if (state.customProfile) {
+                            activeGuard = state.customProfile;
+                        } else {
+                            activeGuard = JSON.parse(JSON.stringify(GUARDS_LIST[parseInt(state.guardId) || 1]));
+                        }
+                        updateProfileInputs();
+
+                        const [y, m, d] = (state.startDate || "2026-07-06").split('-').map(Number);
+                        const startMon = new Date(y, m - 1, d);
+                        generateWeekDates(startMon);
+
+                        const mNames = ["JANUARI", "FEBRUARI", "MAC", "APRIL", "MEI", "JUN", "JULAI", "OGOS", "SEPTEMBER", "OKTOBER", "NOVEMBER", "DISEMBER"];
+                        const curM = startMon.getMonth() + 1;
+                        const curY = startMon.getFullYear();
+                        const nextM = (curM === 12) ? 1 : (curM + 1);
+                        const nextY = (curM === 12) ? (curY + 1) : curY;
+                        document.getElementById("lblMonthHeader").textContent = `${mNames[curM-1]} ${curY} / ${mNames[nextM-1]} ${nextY}`;
+
+                        weekScheduleData = state.weekScheduleData;
+                        calculateAndRenderAll(false);
+                        return true;
+                    }
+                }
+            } catch (e) {
+                console.warn("Error loading stored state:", e);
+            }
+            return false;
+        }
+
+        function resetToDefaultSample() {
+            if (confirm("Adakah anda pasti mahu memuat semula data contoh rasmi (Adnan - Julai/Ogos 2026)? Sebarang perubahan semasa akan digantikan.")) {
+                localStorage.removeItem(STORAGE_KEY);
+                loadOfficialSampleAdnan();
+            }
+        }
+
+        // =========================================================================
+        // MODAL INTERACTION (SETTING SHIFTS LIVE BY CLICKING / TICKING)
+        // =========================================================================
+        function updateModalButtonStates() {
+            // Highlight Hakiki buttons
+            const hakikiText = (tempModalHakiki.text || "").trim();
+            const isHakikiPagi = /8\.00\s*Am\s*[–-]\s*4\.00\s*Pm/i.test(hakikiText);
+            const isHakikiPetang = /4\.00\s*Pm\s*[–-]\s*12\.00\s*Am/i.test(hakikiText);
+            const isHakikiMalam = /12\.00\s*Am\s*[–-]\s*8\.00\s*Am/i.test(hakikiText);
+            const isHakikiHRM = (hakikiText === "HRM");
+            const isHakikiHKM = (hakikiText === "HKM");
+            const isHakikiHKA = (hakikiText === "HKA");
+            const isHakikiNone = (!hakikiText || hakikiText === "-" || (tempModalHakiki.hours === 0 && !isHakikiHRM && !isHakikiHKM && !isHakikiHKA));
+
+            const hakikiBtns = [
+                { id: "btnHakiki_M", label: "Malam (8j)", active: isHakikiMalam },
+                { id: "btnHakiki_P", label: "Pagi (8j)", active: isHakikiPagi },
+                { id: "btnHakiki_PT", label: "Petang (8j)", active: isHakikiPetang },
+                { id: "btnHakiki_NONE", label: "Tiada Syif (0j)", active: isHakikiNone },
+                { id: "btnHakiki_HRM", label: "HRM (Rehat)", active: isHakikiHRM },
+                { id: "btnHakiki_HKM", label: "HKM (Kelepasan)", active: isHakikiHKM },
+                { id: "btnHakiki_HKA", label: "HKA (Cuti Am)", active: isHakikiHKA }
+            ];
+
+            let hakikiLabel = "Tiada Syif";
+            hakikiBtns.forEach(item => {
+                const btn = document.getElementById(item.id);
+                if (btn) {
+                    btn.classList.remove("ring-2", "ring-blue-600", "bg-blue-100", "border-blue-600");
+                    if (item.active) {
+                        btn.classList.add("ring-2", "ring-blue-600", "bg-blue-100", "border-blue-600");
+                        hakikiLabel = item.label;
+                    }
+                }
+            });
+
+            // Highlight KLM buttons
+            const klmText = (tempModalKlm.text || "").trim();
+            const isKlmNone = (!klmText || tempModalKlm.grossHours === 0);
+            const isKlm8Pagi = (/8\.00\s*Am\s*[–-]\s*4\.00\s*Pm/i.test(klmText) && tempModalKlm.grossHours === 8);
+            const isKlm8Petang = (/4\.00\s*Pm\s*[–-]\s*12\.00\s*Am/i.test(klmText) && tempModalKlm.grossHours === 8);
+            const isKlm8Malam = (/12\.00\s*Am\s*[–-]\s*8\.00\s*Am/i.test(klmText) && tempModalKlm.grossHours === 8);
+            
+            const isKlm16M_PT = (klmText.includes("12.00 Am") && klmText.includes("4.00") && tempModalKlm.grossHours === 16);
+            const isKlm16M_P = (klmText.includes("12.00 Am") && klmText.includes("8.00 Am") && !klmText.includes("4.00") && tempModalKlm.grossHours === 16);
+            const isKlm16P_PT = (klmText.includes("8.00 Am") && klmText.includes("4.00 Pm") && !klmText.includes("12.00 Am") && tempModalKlm.grossHours === 16);
+            const isKlm16PT_M = (klmText.startsWith("16 Jam\n4.00 Pm") && tempModalKlm.grossHours === 16);
+            const isKlm10 = (tempModalKlm.grossHours === 10);
+            const isKlm6 = (tempModalKlm.grossHours === 6);
+
+            const klmBtns = [
+                { id: "btnKlm_NONE", label: "Tiada OT", active: isKlmNone },
+                { id: "btnKlm_8S", label: "OT Pagi (8j)", active: isKlm8Pagi },
+                { id: "btnKlm_8P", label: "OT Petang (8j)", active: isKlm8Petang },
+                { id: "btnKlm_8M", label: "OT Malam (8j)", active: isKlm8Malam },
+                { id: "btnKlm_16_M_PT", label: "Double Malam+Petang (16j)", active: isKlm16M_PT },
+                { id: "btnKlm_16_M_P", label: "Double Malam+Pagi (16j)", active: isKlm16M_P },
+                { id: "btnKlm_16_P_PT", label: "Double Pagi+Petang (16j)", active: isKlm16P_PT },
+                { id: "btnKlm_16_PT_M", label: "Double Petang+Malam (16j)", active: isKlm16PT_M },
+                { id: "btnKlm_10", label: "OT 10 Jam (Siang)", active: isKlm10 },
+                { id: "btnKlm_6", label: "OT 6 Jam (Petang)", active: isKlm6 }
+            ];
+
+            let klmLabel = "Tiada OT";
+            klmBtns.forEach(item => {
+                const btn = document.getElementById(item.id);
+                if (btn) {
+                    btn.classList.remove("ring-2", "ring-amber-500", "bg-amber-200", "border-amber-600");
+                    if (item.active) {
+                        btn.classList.add("ring-2", "ring-amber-500", "bg-amber-200", "border-amber-600");
+                        klmLabel = item.label;
+                    }
+                }
+            });
+
+            // Update live summary
+            const totalDailyHours = (tempModalHakiki.hours || 0) + (tempModalKlm.grossHours || 0);
+            const summaryEl = document.getElementById("modalLiveSummaryText");
+            const hoursEl = document.getElementById("modalLiveHoursText");
+            if (summaryEl) {
+                summaryEl.innerHTML = `Hakiki: <span class="text-blue-700 font-bold">${hakikiLabel}</span> &nbsp;|&nbsp; OT: <span class="text-amber-700 font-bold">${klmLabel}</span>`;
+            }
+            if (hoursEl) {
+                hoursEl.textContent = `${totalDailyHours} Jam`;
+            }
+        }
+
+        function onModalCustomKlmInput() {
+            const val = document.getElementById("modalCustomKlmText").value.trim();
+            if (val) {
+                tempModalKlm.text = val;
+                const m = val.match(/^(\d+)\s*Jam/i);
+                if (m) {
+                    tempModalKlm.grossHours = parseInt(m[1]);
+                    tempModalKlm.siangHours = tempModalKlm.grossHours;
+                    tempModalKlm.malamHours = 0;
+                }
+            } else {
+                tempModalKlm = { text: "", grossHours: 0, siangHours: 0, malamHours: 0 };
+            }
+            updateModalButtonStates();
+        }
+
+        function openEditModal(w, d) {
+            activeModalSlot = { w, d };
+            const dtInfo = weekDates[w][d];
+            const cellData = weekScheduleData[w][d];
+
+            const dayNames = ["Isnin", "Selasa", "Rabu", "Khamis", "Jumaat", "Sabtu", "Ahad"];
+            document.getElementById("modalDateTitle").textContent = `Tarikh: ${dtInfo.formatted} (${dayNames[d]} - Minggu ${w + 1})`;
+
+            tempModalHakiki = { text: cellData.hakiki, hours: cellData.hHours, type: "" };
+            tempModalKlm = { text: cellData.klm, grossHours: cellData.kGross, siangHours: cellData.kSiang, malamHours: cellData.kMalam };
+
+            document.getElementById("modalCustomKlmText").value = cellData.klm;
+
+            updateModalButtonStates();
+            document.getElementById("editShiftModal").classList.remove("hidden");
+        }
+
+        function closeEditModal() {
+            document.getElementById("editShiftModal").classList.add("hidden");
+            activeModalSlot = { w: null, d: null };
+        }
+
+        function setModalHakiki(text, hours, type) {
+            tempModalHakiki = { text, hours, type };
+            updateModalButtonStates();
+        }
+
+        function setModalKlm(text, gross, siang, malam) {
+            tempModalKlm = { text, grossHours: gross, siangHours: siang, malamHours: malam };
+            document.getElementById("modalCustomKlmText").value = text;
+            updateModalButtonStates();
+        }
+
+        function saveModalShift() {
+            if (activeModalSlot.w === null || activeModalSlot.d === null) return;
+            const { w, d } = activeModalSlot;
+
+            const customText = document.getElementById("modalCustomKlmText").value.trim();
+            if (customText && customText !== tempModalKlm.text) {
+                tempModalKlm.text = customText;
+                if (tempModalKlm.grossHours === 0) {
+                    tempModalKlm.grossHours = 8;
+                    tempModalKlm.siangHours = 8;
+                    tempModalKlm.malamHours = 0;
+                }
+            }
+
+            weekScheduleData[w][d] = {
+                hakiki: tempModalHakiki.text || "-",
+                hHours: tempModalHakiki.hours,
+                klm: tempModalKlm.text || "",
+                kGross: tempModalKlm.grossHours || 0,
+                kSiang: tempModalKlm.siangHours || 0,
+                kMalam: tempModalKlm.malamHours || 0
+            };
+
+            closeEditModal();
+            calculateAndRenderAll(true);
+        }
+    </script>
+</body>
+</html>
+
