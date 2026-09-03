@@ -8,6 +8,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Firebase SDK (Compat) -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap');
 
@@ -72,6 +75,18 @@
             font-weight: bold;
         }
 
+        .cr-box {
+            background-color: #dcfce7 !important; /* Soft Mint / Emerald (Cuti Rehat 8j) */
+            color: #14532d !important;
+            font-weight: bold;
+        }
+
+        .cs-box {
+            background-color: #fef9c3 !important; /* Soft Yellow (Cuti Sakit 8j) */
+            color: #713f12 !important;
+            font-weight: bold;
+        }
+
         .klm-box {
             background-color: #fdba74 !important; /* Warm Orange / Amber (JPA 2024 Circular) */
             color: #7c2d12 !important;
@@ -109,6 +124,17 @@
             .pdf-page:last-child {
                 page-break-after: auto !important;
             }
+
+            /* Dedicated Reconciliation Print Switching */
+            body.print-recon-mode .main-claim-page {
+                display: none !important;
+            }
+            body.print-recon-mode #reconciliationPrintPage {
+                display: block !important;
+            }
+            body:not(.print-recon-mode) #reconciliationPrintPage {
+                display: none !important;
+            }
         }
     </style>
 </head>
@@ -132,13 +158,23 @@
 
             <!-- Header Quick Actions -->
             <div class="flex flex-wrap items-center gap-2">
-                <span class="text-[11px] font-semibold text-emerald-300 bg-emerald-950/80 px-2.5 py-1.5 rounded-lg border border-emerald-500/40 flex items-center gap-1.5 shadow-sm" title="Semua data, syif, dan pengiraan anda disimpan secara automatik ke dalam pelayar web anda.">
-                    <i class="fa-solid fa-cloud-arrow-up text-emerald-400"></i> Auto-Save Aktif
-                </span>
-                <button onclick="resetToDefaultSample()" class="bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-black px-3.5 py-2 rounded-lg shadow-md transition flex items-center gap-1.5 border border-amber-300 ring-2 ring-amber-300/40" title="Muat semula contoh data asal ADNAN BIN AWANG (Julai/Ogos 2026)">
-                    <i class="fa-solid fa-file-pdf text-red-700"></i> Reset Contoh Asal PDF
+                <button onclick="openCloudConfigModal()" id="btnCloudStatus" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold px-3 py-1.5 rounded-lg shadow-md transition flex items-center gap-1.5 border border-slate-600" title="Status Cloud Database (Sinkronisasi dengan PC lain)">
+                    <span class="inline-block w-2 h-2 rounded-full bg-amber-400" id="cloudStatusDot"></span>
+                    <span id="cloudStatusText">Cloud Sync</span>
                 </button>
-                <button onclick="window.print()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2 rounded-lg shadow-md transition flex items-center gap-1.5 border border-emerald-500">
+                <button onclick="openRecordsModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-md transition flex items-center gap-1.5 border border-indigo-400" title="Buka senarai semua rekod bulan & pegawai yang disimpan">
+                    <i class="fa-solid fa-folder-open text-amber-300"></i> Pangkalan Rekod (<span id="savedCountBadge" class="bg-amber-400 text-slate-950 px-1.5 py-0.2 rounded-full font-black text-[10px]">0</span>)
+                </button>
+                <button onclick="saveCurrentRecord(false)" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-md transition flex items-center gap-1.5 border border-blue-400" title="Simpan rekod bulan semasa ini">
+                    <i class="fa-solid fa-floppy-disk"></i> Simpan Rekod Ini
+                </button>
+                <button onclick="resetToDefaultSample()" class="bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-black px-3 py-1.5 rounded-lg shadow-md transition flex items-center gap-1.5 border border-amber-300 ring-2 ring-amber-300/40" title="Muat semula contoh data asal ADNAN BIN AWANG (Julai/Ogos 2026)">
+                    <i class="fa-solid fa-file-pdf text-red-700"></i> Contoh Asal
+                </button>
+                <button onclick="openReconciliationModal()" class="bg-purple-700 hover:bg-purple-800 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-md transition flex items-center gap-1.5 border border-purple-500" title="Penyata Penyelarasan & Pelarasan Audit OT (Januari - Julai 2026)">
+                    <i class="fa-solid fa-scale-balanced text-amber-300"></i> Penyata Pelarasan Audit (Jan-Jul)
+                </button>
+                <button onclick="window.print()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3.5 py-1.5 rounded-lg shadow-md transition flex items-center gap-1.5 border border-emerald-500">
                     <i class="fa-solid fa-print"></i> Cetak Borang (A4)
                 </button>
             </div>
@@ -155,7 +191,19 @@
                     <h2 class="text-base font-black text-slate-900 flex items-center gap-2">
                         <i class="fa-solid fa-sliders text-blue-600"></i> Panel Kawalan &amp; Pemilihan Pegawai
                     </h2>
-                    <p class="text-xs text-slate-500">Pilih pegawai, tetapkan bulan tuntutan, dan pilih syif bertugas untuk mengira tuntutan.</p>
+                    <div class="flex flex-wrap items-center gap-2 mt-1">
+                        <p class="text-xs text-slate-500">Pilih pegawai, tetapkan bulan tuntutan, dan pilih syif bertugas untuk mengira tuntutan.</p>
+                        <span class="text-slate-300">|</span>
+                        <div class="flex items-center gap-1.5 text-xs">
+                            <span class="text-slate-500 font-semibold">Rekod Semasa:</span>
+                            <span id="activeRecordBadge" class="bg-blue-50 text-blue-800 font-bold px-2 py-0.5 rounded border border-blue-200 text-[11px]">
+                                ADNAN BIN AWANG (JULAI 2026)
+                            </span>
+                            <span id="activeRecordSaveStatus" class="text-emerald-700 font-semibold text-[10.5px] bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                                <i class="fa-solid fa-check"></i> Auto-Save
+                            </span>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="flex flex-wrap items-center gap-3">
@@ -206,9 +254,9 @@
                         <input type="date" id="startDatePicker" onchange="onCustomStartDateChange()" value="2026-07-06" class="bg-slate-50 border border-slate-300 text-xs rounded-lg px-2.5 py-1 font-bold text-slate-800 focus:ring-2 focus:ring-blue-500">
                     </div>
 
-                    <div class="pt-4 sm:pt-0">
-                        <button onclick="resetAllShifts()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold px-3 py-1.5 rounded-lg border border-slate-300 transition flex items-center gap-1">
-                            <i class="fa-solid fa-rotate-left"></i> Reset Syif
+                    <div class="pt-4 sm:pt-0 flex items-center gap-1.5">
+                        <button onclick="resetAllShifts()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold px-3 py-1.5 rounded-lg border border-slate-300 transition flex items-center gap-1" title="Kosongkan syif bagi bulan ini">
+                            <i class="fa-solid fa-rotate-left"></i> Reset
                         </button>
                     </div>
                 </div>
@@ -276,7 +324,7 @@
         <!-- =================================================================== -->
 
         <!-- PAGE 1: JADUAL TUNTUTAN KERJA LEBIH MASA (4 MINGGU) -->
-        <div class="pdf-page" id="page1Print">
+        <div class="pdf-page main-claim-page" id="page1Print">
             
             <div class="text-center font-bold text-[10.5pt] mb-3 leading-tight uppercase tracking-wide">
                 BORANG TUNTUTAN KERJA LEBIH MASA BAGI BULAN <span id="lblMonthHeader">JULAI 2026 / OGOS 2026</span>
@@ -334,7 +382,7 @@
         </div>
 
         <!-- PAGE 2: PENGIRAAN JUMLAH JAM & ELM (BAHAGIAN 1) -->
-        <div class="pdf-page" id="page2Print">
+        <div class="pdf-page main-claim-page" id="page2Print">
             
             <table class="official-table mb-4">
                 <tbody>
@@ -403,7 +451,7 @@
         </div>
 
         <!-- PAGE 3: PENGIRAAN JUMLAH JAM & ELM (BAHAGIAN 2) -->
-        <div class="pdf-page" id="page3Print">
+        <div class="pdf-page main-claim-page" id="page3Print">
             
             <table class="official-table mb-4" id="tableElmBreakdownP3">
                 <thead>
@@ -418,7 +466,7 @@
                     <!-- Week 3 (c) & Week 4 (d) injected via JS -->
                 </tbody>
                 <tfoot>
-                    <tr class="font-bold bg-slate-100">
+                    <tr class="bg-slate-200 font-bold border-t-2 border-black">
                         <td colspan="4" class="text-right pr-3 py-2 text-[9pt]">Jumlah ELM yang layak dibayar</td>
                         <td class="font-black text-[10pt] py-2" id="docTotalElmPaid">RM 803.07</td>
                     </tr>
@@ -435,10 +483,10 @@
             <table style="width: 100%; border-collapse: collapse; text-align: center; font-size: 8pt; margin-top: 30px;">
                 <tr>
                     <td style="width: 33%; border: none;">
-                        Disediakan Oleh:<br><br><br><br>
+                        Disediakan Oleh:<br><br><br><br><br>
                         ____________________________<br>
-                        <strong>(<span id="signGuardName">ADNAN BIN AWANG</span>)</strong><br>
-                        <span class="text-[7.5pt]">Pembantu Keselamatan KP1</span>
+                        <strong>(<span id="docSignName1">ADNAN BIN AWANG</span>)</strong><br>
+                        <span id="docSignJawatan1">Pembantu Keselamatan KP1</span>
                     </td>
                     <td style="width: 33%; border: none;">
                         Disemak Oleh:<br><br><br><br><br>
@@ -455,7 +503,7 @@
         <!-- =================================================================== -->
         <!-- PAGE 4: RINGKASAN AUDIT KELAYAKAN TUNTUTAN (LAYAK VS TIDAK LAYAK)   -->
         <!-- =================================================================== -->
-        <div class="pdf-page" id="page4Print">
+        <div class="pdf-page main-claim-page" id="page4Print">
             
             <div class="text-center mb-4">
                 <h3 class="font-black text-[12pt] uppercase tracking-wide">RINGKASAN AUDIT KELAYAKAN TUNTUTAN ELAUN LEBIH MASA (ELM)</h3>
@@ -564,6 +612,122 @@
 
         </div>
 
+        <!-- =================================================================== -->
+        <!-- PENYATA PENYELARASAN AUDIT (JANUARI - JULAI 2026) - A4 PRINT SHEET  -->
+        <!-- =================================================================== -->
+        <div class="pdf-page" id="reconciliationPrintPage" style="display: none;">
+            
+            <div class="text-center mb-4 border-b-2 border-black pb-2">
+                <h2 class="font-black text-[12pt] uppercase tracking-wide">KERAJAAN MALAYSIA</h2>
+                <h3 class="font-black text-[11pt] uppercase tracking-wide text-blue-950">PENYATA PENYELARASAN AUDIT KELAYAKAN TUNTUTAN ELAUN LEBIH MASA (ELM)</h3>
+                <h4 class="font-bold text-[9.5pt] uppercase text-slate-800">BAGI TEMPOH JANUARI 2026 HINGGA JULAI 2026</h4>
+                <p class="text-[7.5pt] text-slate-600 mt-0.5">
+                    (Pengauditan Semula Pelarasan Waktu Bekerja Syif 45 Jam Seminggu Mengikut Pekeliling JPA 2024 / Bab G)
+                </p>
+            </div>
+
+            <!-- Maklumat Pegawai Grid -->
+            <div class="border border-black p-2 text-[8pt] bg-slate-50 mb-3">
+                <table style="width: 100%; border: none; font-size: 8pt; border-collapse: collapse;">
+                    <tr>
+                        <td style="width: 18%; font-weight: bold; border: none; padding: 2px 4px;">Nama Pegawai</td>
+                        <td style="width: 2%; border: none; padding: 2px 4px;">:</td>
+                        <td style="width: 35%; font-weight: bold; border: none; padding: 2px 4px;" id="reconPrintName">ADNAN BIN AWANG</td>
+                        <td style="width: 18%; font-weight: bold; border: none; padding: 2px 4px;">Gaji Pokok</td>
+                        <td style="width: 2%; border: none; padding: 2px 4px;">:</td>
+                        <td style="width: 25%; font-weight: bold; border: none; padding: 2px 4px;" id="reconPrintGaji">RM 3,208.19</td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: bold; border: none; padding: 2px 4px;">No. Kad Pengenalan</td>
+                        <td style="border: none; padding: 2px 4px;">:</td>
+                        <td style="border: none; padding: 2px 4px;" id="reconPrintNokp">690901035173</td>
+                        <td style="font-weight: bold; border: none; padding: 2px 4px;">Kadar Sejam</td>
+                        <td style="border: none; padding: 2px 4px;">:</td>
+                        <td style="border: none; padding: 2px 4px; font-weight: bold; color: #1e3a8a;" id="reconPrintKadar">RM 15.37</td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: bold; border: none; padding: 2px 4px;">Jawatan / Gred</td>
+                        <td style="border: none; padding: 2px 4px;">:</td>
+                        <td style="border: none; padding: 2px 4px;" id="reconPrintJawatan">PEMBANTU KESELAMATAN KP1</td>
+                        <td style="font-weight: bold; border: none; padding: 2px 4px;">Pusat Pembayar</td>
+                        <td style="border: none; padding: 2px 4px;">:</td>
+                        <td style="border: none; padding: 2px 4px;" id="reconPrintPusat">8041</td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- Table Comparison 7 Cycles -->
+            <table class="official-table mb-3" style="font-size: 7.5pt;">
+                <thead>
+                    <tr class="bg-slate-200">
+                        <th style="width: 5%;">Bil</th>
+                        <th style="width: 18%;">Bulan / Kitaran Tuntutan</th>
+                        <th style="width: 22%;">Tempoh Kitaran Syif (28 Hari)</th>
+                        <th style="width: 17%;">(A) Dibayar Terdahulu (Baucar Lama)</th>
+                        <th style="width: 18%;">(B) Sebenar Layak (Format JPA Syif)</th>
+                        <th style="width: 20%;">(A – B) Pelarasan / Terlebih Bayar</th>
+                    </tr>
+                </thead>
+                <tbody id="reconPrintTableBody">
+                    <!-- Injected via JS -->
+                </tbody>
+                <tfoot>
+                    <tr class="bg-slate-200 font-bold border-t-2 border-black text-[8pt]">
+                        <td colspan="3" class="text-right pr-2 py-1.5 uppercase">JUMLAH KESELURUHAN (JAN – JUL 2026):</td>
+                        <td class="text-center py-1.5" id="reconPrintTotalPaid">RM 0.00</td>
+                        <td class="text-center py-1.5 text-blue-950 font-black" id="reconPrintTotalEligible">RM 0.00</td>
+                        <td class="text-center py-1.5 text-red-700 font-black text-[8.5pt]" id="reconPrintTotalDiff">RM 0.00</td>
+                    </tr>
+                </tfoot>
+            </table>
+
+            <!-- Ringkasan Status & Syor Pelarasan -->
+            <div class="border border-black p-2.5 bg-slate-50 text-[7.5pt] mb-4 space-y-1.5">
+                <div class="font-bold text-slate-900 flex items-center justify-between border-b border-slate-300 pb-1">
+                    <span><i class="fa-solid fa-calculator mr-1"></i> STATUS PENGAUDITAN &amp; SYOR PELARASAN KEWANGAN:</span>
+                    <span class="text-red-700 font-black text-[8.5pt]" id="reconPrintStatusBadge">TERLEBIH BAYAR: RM 0.00</span>
+                </div>
+                <div class="grid grid-cols-2 gap-2 leading-relaxed">
+                    <div>
+                        <strong>1. Sebab Pelarasan:</strong><br>
+                        Pengiraan terdahulu dibuat mengikut waktu pejabat kalendar biasa tanpa penyerapan defisit 45 jam seminggu bagi waktu bekerja syif mengikut Pekeliling Perkhidmatan JPA 2024.
+                    </div>
+                    <div>
+                        <strong>2. Kaedah Pelarasan Disyorkan:</strong><br>
+                        <span id="reconPrintSyorText">Tolak amaun lebihan bayaran ini daripada baucar tuntutan Elaun Lebih Masa bagi bulan berikutnya (Ogos / September 2026).</span>
+                    </div>
+                </div>
+                <div class="pt-1 text-[7pt] text-slate-600 border-t border-slate-200">
+                    * Lampiran sokongan: Borang 4 Halaman Analisis Terperinci (Ringkasan Audit Pekali & Jam Hakiki) bagi setiap kitaran disertakan bersama penyata ini.
+                </div>
+            </div>
+
+            <!-- TANDATANGAN & PENGESAHAN AUDIT -->
+            <table style="width: 100%; border-collapse: collapse; text-align: center; font-size: 7.5pt; margin-top: 25px;">
+                <tr>
+                    <td style="width: 33%; border: none;">
+                        Disediakan Oleh (Pentadbir):<br><br><br><br>
+                        ____________________________<br>
+                        <strong>(<span id="reconSignPrepName">PENYEDIA TUNTUTAN</span>)</strong><br>
+                        Unit Keselamatan
+                    </td>
+                    <td style="width: 33%; border: none;">
+                        Disemak Oleh (Unit Kewangan/Akaun):<br><br><br><br>
+                        ____________________________<br>
+                        <strong>(PEGAWAI PENYEMAK)</strong><br>
+                        Unit Kewangan &amp; Akaun
+                    </td>
+                    <td style="width: 33%; border: none;">
+                        Diluluskan Oleh (Ketua Jabatan):<br><br><br><br>
+                        ____________________________<br>
+                        <strong>(PEGAWAI PENGAWAL)</strong><br>
+                        Ketua Jabatan / Bahagian
+                    </td>
+                </tr>
+            </table>
+
+        </div>
+
     </main>
 
     <!-- =================================================================== -->
@@ -617,14 +781,20 @@
                         <button type="button" onclick="setModalHakiki('-', 0, 'NONE')" id="btnHakiki_NONE" class="p-2.5 rounded-lg border text-left font-bold transition hover:bg-slate-100 border-slate-300 text-slate-700">
                             <i class="fa-solid fa-ban text-slate-400 mr-1"></i> Tiada Syif (-)<br><span class="text-[10px] font-normal text-slate-500">Tiada Jam Hakiki (0j)</span>
                         </button>
-                        <button type="button" onclick="setModalHakiki('HRM', 0, 'HRM')" id="btnHakiki_HRM" class="p-2.5 rounded-lg border text-left font-black transition bg-olive-100 hover:bg-emerald-100 border-slate-300 text-emerald-950">
-                            <i class="fa-solid fa-leaf text-emerald-600 mr-1"></i> HRM<br><span class="text-[10px] font-normal text-slate-600">Rehat Mingguan</span>
+                        <button type="button" onclick="setModalHakiki('HRM', 0, 'HRM')" id="btnHakiki_HRM" class="p-2.5 rounded-lg border text-left font-black transition bg-orange-50 hover:bg-orange-100 border-orange-300 text-amber-950">
+                            <i class="fa-solid fa-leaf text-orange-600 mr-1"></i> HRM<br><span class="text-[10px] font-normal text-orange-800">Rehat Mingguan (0j)</span>
                         </button>
-                        <button type="button" onclick="setModalHakiki('HKM', 0, 'HKM')" id="btnHakiki_HKM" class="p-2.5 rounded-lg border text-left font-black transition bg-olive-100 hover:bg-emerald-100 border-slate-300 text-emerald-950">
-                            <i class="fa-solid fa-leaf text-emerald-600 mr-1"></i> HKM<br><span class="text-[10px] font-normal text-slate-600">Kelepasan Mingguan</span>
+                        <button type="button" onclick="setModalHakiki('HKM', 0, 'HKM')" id="btnHakiki_HKM" class="p-2.5 rounded-lg border text-left font-black transition bg-blue-50 hover:bg-blue-100 border-blue-300 text-blue-950">
+                            <i class="fa-solid fa-leaf text-blue-600 mr-1"></i> HKM<br><span class="text-[10px] font-normal text-blue-800">Kelepasan Mingguan (0j)</span>
                         </button>
                         <button type="button" onclick="setModalHakiki('HKA', 0, 'HKA')" id="btnHakiki_HKA" class="p-2.5 rounded-lg border text-left font-black transition bg-rose-50 hover:bg-rose-100 border-rose-300 text-rose-950">
-                            <i class="fa-solid fa-star text-rose-500 mr-1"></i> HKA<br><span class="text-[10px] font-normal text-rose-700">Cuti Kelepasan Am</span>
+                            <i class="fa-solid fa-star text-rose-600 mr-1"></i> HKA<br><span class="text-[10px] font-normal text-rose-800">Cuti Kelepasan Am (0j)</span>
+                        </button>
+                        <button type="button" onclick="setModalHakiki('CR\n(Cuti Rehat)', 8, 'CR')" id="btnHakiki_CR" class="p-2.5 rounded-lg border text-left font-black transition bg-emerald-50 hover:bg-emerald-100 border-emerald-300 text-emerald-950">
+                            <i class="fa-solid fa-umbrella-beach text-emerald-600 mr-1"></i> CR (8j Hakiki)<br><span class="text-[10px] font-normal text-emerald-800">Cuti Rehat Tahunan</span>
+                        </button>
+                        <button type="button" onclick="setModalHakiki('CS\n(Cuti Sakit)', 8, 'CS')" id="btnHakiki_CS" class="p-2.5 rounded-lg border text-left font-black transition bg-amber-50 hover:bg-amber-100 border-amber-300 text-amber-950">
+                            <i class="fa-solid fa-notes-medical text-amber-600 mr-1"></i> CS (8j Hakiki)<br><span class="text-[10px] font-normal text-amber-800">Cuti Sakit / MC</span>
                         </button>
                     </div>
                 </div>
@@ -701,6 +871,310 @@
             </div>
         </div>
     </div>
+
+    <!-- =================================================================== -->
+    <!-- MODAL POPUP: PANGKALAN REKOD TUNTUTAN (DATABASE MANAGER)             -->
+    <!-- =================================================================== -->
+    <div id="recordsManagerModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 no-print">
+        <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-150">
+            <!-- Header -->
+            <div class="bg-gradient-to-r from-slate-900 via-blue-950 to-indigo-950 text-white px-6 py-4 flex justify-between items-center">
+                <div>
+                    <h3 class="font-bold text-base flex items-center gap-2">
+                        <i class="fa-solid fa-database text-amber-400"></i> Pangkalan Rekod Tuntutan Bulanan
+                    </h3>
+                    <p class="text-xs text-blue-200">Semua rekod bulanan yang telah anda isi disimpan di sini. Anda boleh buka, edit, atau eksport bila-bila masa.</p>
+                </div>
+                <button onclick="closeRecordsModal()" class="text-white/80 hover:text-white text-xl font-bold">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            
+            <!-- Search & Filter Bar -->
+            <div class="p-4 bg-slate-50 border-b border-slate-200 flex flex-wrap justify-between items-center gap-3">
+                <div class="flex items-center gap-2 flex-1 min-w-[240px]">
+                    <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs"></i>
+                    <input type="text" id="recordSearchInput" oninput="renderSavedRecordsTable()" placeholder="Cari nama pegawai, bulan, atau tahun..." class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs font-semibold">
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="saveCurrentRecord(false)" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-3.5 py-1.5 rounded-lg transition flex items-center gap-1.5 shadow-sm">
+                        <i class="fa-solid fa-floppy-disk"></i> Simpan Rekod Ini
+                    </button>
+                    <button onclick="exportAllRecordsToJson()" class="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-3.5 py-1.5 rounded-lg transition flex items-center gap-1.5 shadow-sm" title="Muat turun salinan backup semua rekod ke fail .json">
+                        <i class="fa-solid fa-download"></i> Backup Semua (.json)
+                    </button>
+                    <label class="bg-slate-700 hover:bg-slate-800 text-white text-xs font-bold px-3.5 py-1.5 rounded-lg transition flex items-center gap-1.5 shadow-sm cursor-pointer" title="Muat naik fail backup .json">
+                        <i class="fa-solid fa-upload"></i> Restore / Import
+                        <input type="file" id="importJsonFileInput" accept=".json" onchange="importRecordsFromJson(event)" class="hidden">
+                    </label>
+                </div>
+            </div>
+
+            <!-- Records Table -->
+            <div class="p-5 overflow-y-auto flex-1">
+                <div id="savedRecordsTableContainer">
+                    <!-- Injected dynamically via JS -->
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="bg-slate-100 px-6 py-3 border-t border-slate-200 flex justify-between items-center text-xs text-slate-600">
+                <span>Jumlah Rekod Tersimpan: <strong id="modalRecordsCountLabel">0</strong></span>
+                <button onclick="closeRecordsModal()" class="px-4 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold rounded-lg transition">
+                    Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- MODAL POPUP: TETAPAN CLOUD DATABASE (SINKRONISASI PELBAGAI PC)      -->
+    <!-- =================================================================== -->
+    <div id="cloudConfigModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 no-print">
+        <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-150">
+            <!-- Header -->
+            <div class="bg-gradient-to-r from-slate-900 via-blue-950 to-indigo-950 text-white px-5 py-4 flex justify-between items-center">
+                <div>
+                    <h3 class="font-bold text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-cloud-bolt text-amber-400"></i> Sambungan Cloud Database
+                    </h3>
+                    <p class="text-[11px] text-blue-200">Kongsi &amp; Segerakkan Rekod Tuntutan Secara Automatik Antara Pelbagai PC</p>
+                </div>
+                <button onclick="closeCloudConfigModal()" class="text-white/80 hover:text-white text-lg font-bold">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="p-5 space-y-4 max-h-[80vh] overflow-y-auto text-xs">
+                <!-- Status Banner -->
+                <div class="p-3 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between">
+                    <div>
+                        <span class="text-slate-500 font-semibold block text-[11px]">Status Sambungan Cloud:</span>
+                        <div id="modalCloudStatusBadge" class="mt-1">
+                            <span class="bg-emerald-100 text-emerald-800 border border-emerald-300 px-2 py-0.5 rounded font-bold">🟢 Cloud Aktif &amp; Bersedia</span>
+                        </div>
+                    </div>
+                    <button onclick="syncAllRecordsWithCloud()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-3 py-1.5 rounded-lg shadow-sm transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-rotate text-amber-300"></i> Segerak Sekarang
+                    </button>
+                </div>
+
+                <!-- Explanation Box -->
+                <div class="bg-blue-50 border border-blue-200 rounded-xl p-3 text-blue-900 space-y-1.5">
+                    <div class="font-bold flex items-center gap-1.5 text-blue-950">
+                        <i class="fa-solid fa-circle-info text-blue-600"></i> Bagaimana Cloud Sync Berfungsi?
+                    </div>
+                    <p class="text-[11px] text-blue-800 leading-relaxed">
+                        Bila anda simpan rekod di komputer ini, data akan disegerakkan ke Cloud secara selamat. Kawan di komputer pejabat lain yang membuka link sistem ini akan dapat melihat dan menyunting rekod yang sama secara automatik!
+                    </p>
+                </div>
+
+                <!-- Cloud Mode Selection -->
+                <div class="space-y-2">
+                    <label class="font-bold text-slate-800 block">PILIHAN PANGKALAN DATA:</label>
+                    <div class="space-y-2">
+                        <label class="flex items-start gap-2 p-2.5 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer">
+                            <input type="radio" name="cloudMode" value="shared" checked onchange="toggleCloudConfigInputs()" class="mt-0.5 text-blue-600">
+                            <div>
+                                <span class="font-bold text-slate-900 block">1. Cloud Kongsi Pejabat (Automasi Penuh)</span>
+                                <span class="text-[11px] text-slate-500">Gunakan Cloud Google Firebase rasmi yang disediakan secara percuma tanpa sebarang persediaan teknikal.</span>
+                            </div>
+                        </label>
+                        <label class="flex items-start gap-2 p-2.5 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer">
+                            <input type="radio" name="cloudMode" value="custom" onchange="toggleCloudConfigInputs()" class="mt-0.5 text-blue-600">
+                            <div>
+                                <span class="font-bold text-slate-900 block">2. Projek Google Firebase Sendiri (Persendirian)</span>
+                                <span class="text-[11px] text-slate-500">Gunakan kunci API dan pangkalan data Firebase milik jabatan / peribadi anda.</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Custom Firebase Inputs (Hidden by default) -->
+                <div id="customFirebaseConfigPanel" class="space-y-2.5 hidden bg-slate-50 p-3 rounded-xl border border-slate-200">
+                    <span class="font-bold text-slate-800 block text-[11px]">Konfigurasi Firebase Sendiri:</span>
+                    <div>
+                        <label class="text-[10.5px] font-semibold text-slate-600 block mb-0.5">Firebase Database URL:</label>
+                        <input type="text" id="cfgDbUrl" placeholder="https://your-app-default-rtdb.firebaseio.com" class="w-full bg-white border border-slate-300 rounded px-2 py-1 text-xs">
+                    </div>
+                    <div>
+                        <label class="text-[10.5px] font-semibold text-slate-600 block mb-0.5">API Key:</label>
+                        <input type="text" id="cfgApiKey" placeholder="AIzaSy..." class="w-full bg-white border border-slate-300 rounded px-2 py-1 text-xs">
+                    </div>
+                    <div>
+                        <label class="text-[10.5px] font-semibold text-slate-600 block mb-0.5">Project ID:</label>
+                        <input type="text" id="cfgProjectId" placeholder="my-custom-project" class="w-full bg-white border border-slate-300 rounded px-2 py-1 text-xs">
+                    </div>
+                </div>
+
+                <!-- Action buttons -->
+                <div class="pt-2 border-t border-slate-200 flex justify-between items-center">
+                    <button onclick="uploadAllLocalToCloud()" class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-3 py-1.5 rounded-lg shadow-sm transition flex items-center gap-1.5" title="Muat naik semua rekod dari PC ini ke Cloud">
+                        <i class="fa-solid fa-cloud-arrow-up"></i> Muat Naik Semua ke Cloud
+                    </button>
+                    <button onclick="saveCloudConfig()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-1.5 rounded-lg shadow-sm transition">
+                        Simpan Tetapan
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- MODAL POPUP: PENYATA PENYELARASAN AUDIT OT (JANUARI - JULAI 2026)    -->
+    <!-- =================================================================== -->
+    <div id="reconciliationModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3 sm:p-4 no-print">
+        <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-4xl max-h-[92vh] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-150">
+            <!-- Header -->
+            <div class="bg-gradient-to-r from-purple-950 via-slate-900 to-indigo-950 text-white px-6 py-4 flex justify-between items-center border-b border-purple-800/60">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-purple-700 flex items-center justify-center text-amber-300 font-bold text-lg shadow-inner">
+                        <i class="fa-solid fa-scale-balanced"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-extrabold text-sm sm:text-base flex items-center gap-2">
+                            Penyata Penyelarasan &amp; Pelarasan Audit OT
+                            <span class="bg-amber-400 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded shadow-sm">JAN – JULAI 2026</span>
+                        </h3>
+                        <p class="text-xs text-purple-200">Bandingkan Bayaran Baucar Lama (Waktu Pejabat) vs Kelayakan Sebenar Pekeliling JPA Syif (45j Seminggu)</p>
+                    </div>
+                </div>
+                <button onclick="closeReconciliationModal()" class="text-white/80 hover:text-white text-xl font-bold p-1">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Body -->
+            <div class="p-5 overflow-y-auto flex-1 space-y-4 text-xs">
+                
+                <!-- Officer Selection Bar -->
+                <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                    <div class="w-full sm:w-auto flex-1">
+                        <label class="text-[11px] font-bold text-slate-600 block mb-1">PILIH PEGAWAI KESELAMATAN:</label>
+                        <select id="reconGuardSelect" onchange="onReconGuardChange(this.value)" class="w-full bg-white border border-slate-300 font-bold text-slate-900 rounded-lg px-3 py-1.5 text-xs shadow-sm">
+                            <!-- Populated via JS -->
+                        </select>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2 text-xs">
+                        <div class="bg-white border border-slate-200 px-3 py-1.5 rounded-lg shadow-sm">
+                            <span class="text-slate-500 block text-[10px]">Gaji Pokok:</span>
+                            <strong class="text-slate-900" id="reconBadgeGaji">RM 3,208.19</strong>
+                        </div>
+                        <div class="bg-white border border-slate-200 px-3 py-1.5 rounded-lg shadow-sm">
+                            <span class="text-slate-500 block text-[10px]">Kadar Sejam:</span>
+                            <strong class="text-blue-700" id="reconBadgeKadar">RM 15.37</strong>
+                        </div>
+                        <div class="bg-white border border-slate-200 px-3 py-1.5 rounded-lg shadow-sm">
+                            <span class="text-slate-500 block text-[10px]">Had Siling 1/3:</span>
+                            <strong class="text-rose-700" id="reconBadgeSiling">RM 1,069.40</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Guidance Alert -->
+                <div class="bg-purple-50 border border-purple-200 rounded-xl p-3 text-purple-950 flex items-start gap-2.5">
+                    <i class="fa-solid fa-lightbulb text-purple-700 text-base mt-0.5"></i>
+                    <div class="leading-relaxed">
+                        <strong>Panduan Pengauditan:</strong> Masukkan jumlah bayaran yang <u>telah dibayar terdahulu</u> dalam lajur <strong>(A)</strong> mengikut rekod baucar lama pejabat. Lajur <strong>(B)</strong> memaparkan kelayakan sebenar mengikut pengiraan syif 45 jam JPA. Sistem akan mengira perbezaan lebihan bayaran secara automatik.
+                    </div>
+                </div>
+
+                <!-- 7-Cycles Comparison Table -->
+                <div class="border border-slate-200 rounded-xl overflow-hidden shadow-sm bg-white">
+                    <div class="bg-slate-100 px-4 py-2.5 border-b border-slate-200 font-bold text-slate-800 flex justify-between items-center">
+                        <span>JADUAL PERBANDINGAN 7 KITARAN SYIF (JANUARI HINGGA JULAI 2026)</span>
+                        <button onclick="autoPopulateReconEligibleFromSavedRecords()" class="text-xs bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 py-1 rounded font-semibold transition flex items-center gap-1" title="Tarik data terkini dari Pangkalan Rekod">
+                            <i class="fa-solid fa-arrows-rotate text-amber-300"></i> Muat Semula Kelayakan (B)
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50 border-b border-slate-200 text-slate-700">
+                                    <th class="py-2.5 px-3 font-bold text-center w-10">Bil</th>
+                                    <th class="py-2.5 px-3 font-bold w-36">Bulan / Kitaran</th>
+                                    <th class="py-2.5 px-3 font-bold w-44">Tarikh Kitaran (4 Minggu)</th>
+                                    <th class="py-2.5 px-3 font-bold text-center bg-amber-50/70 border-x border-amber-200 text-amber-950 w-44">
+                                        (A) Telah Dibayar (Baucar Lama)
+                                    </th>
+                                    <th class="py-2.5 px-3 font-bold text-center bg-blue-50/70 border-r border-blue-200 text-blue-950 w-44">
+                                        (B) Sebenar Layak (JPA Syif)
+                                    </th>
+                                    <th class="py-2.5 px-3 font-bold text-center text-slate-900 w-40">
+                                        (A – B) Terlebih Bayar
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody id="reconModalTableBody" class="divide-y divide-slate-100">
+                                <!-- Injected via JS -->
+                            </tbody>
+                            <tfoot>
+                                <tr class="bg-slate-100 font-bold border-t-2 border-slate-300 text-slate-900">
+                                    <td colspan="3" class="py-3 px-3 text-right uppercase tracking-wider font-extrabold text-[11px]">Jumlah Keseluruhan (Jan–Jul):</td>
+                                    <td class="py-3 px-3 text-center bg-amber-100/70 border-x border-amber-200 font-black text-amber-950 text-sm" id="reconModalTotalPaid">RM 0.00</td>
+                                    <td class="py-3 px-3 text-center bg-blue-100/70 border-r border-blue-200 font-black text-blue-950 text-sm" id="reconModalTotalEligible">RM 0.00</td>
+                                    <td class="py-3 px-3 text-center font-black text-red-700 text-sm" id="reconModalTotalDiff">RM 0.00</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Pelarasan Options & Notes -->
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
+                    <span class="font-bold text-slate-800 block text-xs uppercase tracking-wide">
+                        <i class="fa-solid fa-file-invoice-dollar text-purple-700 mr-1"></i> SYOR &amp; TINDAKAN PELARASAN KEWANGAN:
+                    </span>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div class="space-y-2">
+                            <label class="flex items-start gap-2 p-2.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer">
+                                <input type="radio" name="reconSyorOption" value="next_month" checked onchange="updateReconSyorText()" class="mt-0.5 text-purple-600">
+                                <div>
+                                    <span class="font-bold text-slate-900 block">Pilihan 1: Tolak Sekali Gus dalam OT Bulan Semasa</span>
+                                    <span class="text-[11px] text-slate-500">Tolak amaun lebihan bayaran ini terus daripada baucar tuntutan OT bulan Ogos / September 2026.</span>
+                                </div>
+                            </label>
+                            <label class="flex items-start gap-2 p-2.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer">
+                                <input type="radio" name="reconSyorOption" value="installment" onchange="updateReconSyorText()" class="mt-0.5 text-purple-600">
+                                <div>
+                                    <span class="font-bold text-slate-900 block">Pilihan 2: Potongan Berjadual Melalui Penyata Gaji</span>
+                                    <span class="text-[11px] text-slate-500">Potongan ansuran berjadual secara bulanan (cth: RM 150.00 sebulan) dengan persetujuan pegawai.</span>
+                                </div>
+                            </label>
+                        </div>
+                        <div>
+                            <label class="text-[11px] font-semibold text-slate-600 block mb-1">Catatan Tambahan Pentadbir / Juruaudit:</label>
+                            <textarea id="reconCatatanInput" oninput="saveReconDataToStorage()" rows="3" placeholder="Contoh: Semakan semula mendapati terdapat penyerapan defisit 5 jam seminggu bagi setiap kitaran." class="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs text-slate-800"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Footer -->
+            <div class="bg-slate-100 px-6 py-3.5 border-t border-slate-200 flex flex-wrap justify-between items-center gap-2 text-xs">
+                <div class="flex items-center gap-2">
+                    <button onclick="saveReconDataToStorage(true)" class="bg-purple-700 hover:bg-purple-800 text-white font-bold px-3.5 py-1.5 rounded-lg shadow-sm transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-floppy-disk"></i> Simpan Penyata
+                    </button>
+                    <button onclick="exportReconCsv()" class="bg-slate-700 hover:bg-slate-800 text-white font-bold px-3 py-1.5 rounded-lg shadow-sm transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-file-csv text-emerald-400"></i> Muat Turun CSV
+                    </button>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="printReconciliationStatement()" class="bg-emerald-700 hover:bg-emerald-800 text-white font-black px-4 py-1.5 rounded-lg shadow-md transition flex items-center gap-1.5 border border-emerald-600">
+                        <i class="fa-solid fa-print"></i> Cetak Penyata Penyelarasan (A4)
+                    </button>
+                    <button onclick="closeReconciliationModal()" class="px-4 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold rounded-lg transition">
+                        Tutup
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none no-print"></div>
 
     <!-- =================================================================== -->
     <!-- JAVASCRIPT APP LOGIC & AUTO-CALCULATION ENGINE                      -->
@@ -805,10 +1279,23 @@
 
         // 3. INITIALIZATION
         document.addEventListener("DOMContentLoaded", () => {
-            const restored = loadFromLocalStorage();
-            if (!restored) {
-                loadOfficialSampleAdnan();
+            seedDefaultRecordsIfEmpty();
+            const lastActiveKey = localStorage.getItem(DB_LAST_ACTIVE_KEY);
+            let restored = false;
+            if (lastActiveKey && hasRecord(lastActiveKey)) {
+                restored = loadRecordByKey(lastActiveKey, false);
             }
+            if (!restored) {
+                const janKey = getRecordKey("1", "2026", "1");
+                if (hasRecord(janKey)) {
+                    loadRecordByKey(janKey, false);
+                } else {
+                    loadOfficialSampleAdnan();
+                }
+            }
+            updateActiveRecordBadge();
+            updateSavedCountBadge();
+            initFirebaseCloud();
         });
 
         // 4. LOAD SAMPLE DATA EXACTLY MATCHING USER'S PDF (JULAI / OGOS 2026 - ADNAN)
@@ -913,17 +1400,27 @@
             document.getElementById("lblMonthHeader").textContent = headerText;
         }
 
-        function onPeriodConfigChange() {
+        function onPeriodConfigChange(savePrev = true) {
+            if (savePrev) {
+                saveCurrentRecord(true);
+            }
+
             const y = parseInt(document.getElementById("yearSelect").value);
             const m = parseInt(document.getElementById("monthSelect").value);
-            
-            // Find first Monday of that period
+            const gId = document.getElementById("guardSelect").value || "1";
+            const targetKey = getRecordKey(gId, y, m);
+
+            // If this staff already has a saved record for this month/year, load it!
+            if (hasRecord(targetKey)) {
+                loadRecordByKey(targetKey, true);
+                updateActiveRecordBadge();
+                return;
+            }
+
+            // Otherwise, calculate first Monday of that period and create fresh draft
             const firstDay = new Date(y, m - 1, 1);
             const dow = firstDay.getDay(); // 0=Ahd, 1=Isn, 2=Sel, ...
-            let offsetToMon = 0;
-            if (dow === 1) offsetToMon = 0;
-            else if (dow === 0) offsetToMon = 1;
-            else offsetToMon = (8 - dow);
+            let offsetToMon = (dow === 1) ? 0 : ((dow === 0) ? 1 : (8 - dow));
 
             const startMon = new Date(y, m - 1, 1 + offsetToMon);
 
@@ -934,7 +1431,13 @@
 
             generateWeekDates(startMon);
             updatePeriodHeaderLabel();
-            calculateAndRenderAll();
+            
+            // Clean standard shift draft (8am-4pm Isnin-Jumaat, HRM Sabtu, HKM Ahad)
+            initDefaultCleanSchedule();
+            calculateAndRenderAll(false);
+            saveCurrentRecord(true);
+            updateActiveRecordBadge();
+            showToast(`📝 Draf Baru Dimulakan: ${document.getElementById("lblMonthHeader").textContent}`);
         }
 
         function onCustomStartDateChange() {
@@ -946,13 +1449,30 @@
             generateWeekDates(startMon);
             updatePeriodHeaderLabel();
             calculateAndRenderAll();
+            saveCurrentRecord(true);
+            updateActiveRecordBadge();
         }
 
         function onGuardSelectChange() {
+            // Save current record first
+            saveCurrentRecord(true);
+
             const idx = parseInt(document.getElementById("guardSelect").value);
             activeGuard = JSON.parse(JSON.stringify(GUARDS_LIST[idx] || GUARDS_LIST[0]));
             updateProfileInputs();
-            calculateAndRenderAll();
+
+            const y = parseInt(document.getElementById("yearSelect").value);
+            const m = parseInt(document.getElementById("monthSelect").value);
+            const gId = document.getElementById("guardSelect").value;
+            const targetKey = getRecordKey(gId, y, m);
+
+            if (hasRecord(targetKey)) {
+                loadRecordByKey(targetKey, true);
+            } else {
+                calculateAndRenderAll();
+                saveCurrentRecord(true);
+            }
+            updateActiveRecordBadge();
         }
 
         function updateProfileInputs() {
@@ -1075,37 +1595,68 @@
                 let weekGrossMalam = 0;
                 let klmSlotsCount = 0;
 
+                // Category trackers for HBB, HR (HRM/HKM), HK (HKA)
+                let catSlots = {
+                    HBB: { gross: 0, siang: 0, malam: 0, slots: 0, dates: [] },
+                    HR:  { gross: 0, siang: 0, malam: 0, slots: 0, dates: [] },
+                    HK:  { gross: 0, siang: 0, malam: 0, slots: 0, dates: [] }
+                };
+
                 for (let d = 0; d < 7; d++) {
                     const dtInfo = (weekDates[w] && weekDates[w][d]) ? weekDates[w][d] : { formatted: "-" };
                     const cellData = (weekScheduleData[w] && weekScheduleData[w][d]) ? weekScheduleData[w][d] : { hakiki: "HRM", hHours: 0, klm: "", kGross: 0, kSiang: 0, kMalam: 0 };
 
                     dateCells += `<td style="font-weight:bold;">${dtInfo.formatted}</td>`;
 
-                    // Hakiki Box (JPA 2024 Colors: HRM=Peach, HKM=Sky Blue, HKA=Red)
+                    // Hakiki Box (JPA 2024 Colors: HRM=Peach, HKM=Sky Blue, HKA=Red, CR=Mint, CS=Yellow)
                     const isHRM = (cellData.hakiki === "HRM");
                     const isHKM = (cellData.hakiki === "HKM");
                     const isHKA = (cellData.hakiki === "HKA");
+                    const isCR = (cellData.hakiki && cellData.hakiki.startsWith("CR"));
+                    const isCS = (cellData.hakiki && cellData.hakiki.startsWith("CS"));
                     const isOff = (isHRM || isHKM || isHKA);
                     
                     let offCls = "";
                     if (isHRM) offCls = "hrm-box";
                     else if (isHKM) offCls = "hkm-box";
                     else if (isHKA) offCls = "hka-box";
+                    else if (isCR) offCls = "cr-box";
+                    else if (isCS) offCls = "cs-box";
 
                     const hakikiFormatted = formatCellContent(cellData.hakiki);
                     hakikiCells += `<td class="interactive-cell ${offCls}" onclick="openEditModal(${w}, ${d})" title="Klik untuk ubah">${hakikiFormatted}</td>`;
 
-                    if (!isOff && cellData.hHours > 0) {
-                        weekWorkHours += cellData.hHours;
+                    // Hakiki Hours (Shifts, CR, CS contribute to weekWorkHours)
+                    const hHours = (cellData.hHours !== undefined) ? cellData.hHours : (isOff ? 0 : 8);
+                    if (hHours > 0) {
+                        weekWorkHours += hHours;
                     }
 
                     // KLM Box (Warm Orange)
-                    if (cellData.kGross > 0) {
-                        weekGrossKlm += cellData.kGross;
-                        weekGrossSiang += cellData.kSiang;
-                        weekGrossMalam += cellData.kMalam;
+                    const kGross = cellData.kGross || 0;
+                    if (kGross > 0) {
+                        // Safe fallback for siang/malam hours if missing
+                        let kSiang = (cellData.kSiang !== undefined) ? cellData.kSiang : (kGross === 8 ? 7 : (kGross === 16 ? 13 : (kGross === 10 ? 9 : kGross)));
+                        let kMalam = (cellData.kMalam !== undefined) ? cellData.kMalam : (kGross === 8 && kSiang === 0 ? 6 : (kGross === 16 && kSiang === 13 ? 2 : 0));
+
+                        weekGrossKlm += kGross;
+                        weekGrossSiang += kSiang;
+                        weekGrossMalam += kMalam;
                         klmSlotsCount++;
-                        otDates.push(`${dtInfo.dayNum}/${dtInfo.mNum}`);
+                        
+                        const dateStr = `${dtInfo.dayNum}/${dtInfo.mNum}`;
+                        otDates.push(dateStr);
+
+                        // Determine rate category (HK=HKA, HR=HRM/HKM, HBB=Regular/CR/CS)
+                        let cat = "HBB";
+                        if (isHKA) cat = "HK";
+                        else if (isHRM || isHKM) cat = "HR";
+
+                        catSlots[cat].gross += kGross;
+                        catSlots[cat].siang += kSiang;
+                        catSlots[cat].malam += kMalam;
+                        catSlots[cat].slots++;
+                        catSlots[cat].dates.push(dateStr);
 
                         const klmFormatted = formatCellContent(cellData.klm);
                         klmCells += `<td class="interactive-cell klm-box" onclick="openEditModal(${w}, ${d})" title="Klik untuk ubah">${klmFormatted}</td>`;
@@ -1117,43 +1668,62 @@
                 weekHoursList.push(weekWorkHours);
                 weekKlmGrossList.push(weekGrossKlm);
 
-                // DEDUCTION OF REST HOURS (1 hour deducted per ~8h KLM slot)
-                const restDeduction = (weekGrossKlm === 8) ? 1 : (weekGrossKlm === 24 ? 3 : (weekGrossKlm === 34 ? 4 : (weekGrossKlm === 16 ? 2 : (klmSlotsCount > 0 ? klmSlotsCount : 0))));
-                const netKlm = Math.max(0, weekGrossKlm - restDeduction);
-                weekNetKlmList.push({ gross: weekGrossKlm, rest: restDeduction, net: netKlm, mark: weekMarks[w] });
+                // DEDUCTION OF REST HOURS PER CATEGORY
+                function calcNetCategory(catObj) {
+                    if (catObj.gross <= 0) return { gross: 0, rest: 0, net: 0, siang: 0, malam: 0 };
+                    const rest = (catObj.gross === 8) ? 1 : (catObj.gross === 16 ? 2 : (catObj.gross === 24 ? 3 : (catObj.gross === 34 ? 4 : (catObj.slots > 0 ? catObj.slots : 0))));
+                    const net = Math.max(0, catObj.gross - rest);
+                    return { gross: catObj.gross, rest: rest, net: net, siang: catObj.siang, malam: catObj.malam };
+                }
 
-                // HAKIKI ANALYSIS (JPA 2024 PPSM WAKTU BEKERJA CERAIAN SR.4.3.1 & SR.4.4.1):
-                let netSiang = weekGrossSiang;
-                let netMalam = weekGrossMalam;
+                const netHbb = calcNetCategory(catSlots.HBB);
+                const netHr  = calcNetCategory(catSlots.HR);
+                const netHk  = calcNetCategory(catSlots.HK);
 
+                const totalGross = netHbb.gross + netHr.gross + netHk.gross;
+                const totalRest  = netHbb.rest + netHr.rest + netHk.rest;
+                const totalNet   = netHbb.net + netHr.net + netHk.net;
+                weekNetKlmList.push({ gross: totalGross, rest: totalRest, net: totalNet, mark: weekMarks[w], hbb: netHbb, hr: netHr, hk: netHk });
+
+                // DEFICIT VS SURPLUS CALCULATION (JPA 2024 PPSM WAKTU BEKERJA SR.4.3.1 & SR.4.4.1)
                 let surplusHours = 0;
                 let surplusMoney = 0;
                 let takLayakSiang = 0;
                 let takLayakMalam = 0;
-                let layakSiang = netSiang;
-                let layakMalam = netMalam;
+
+                let layakHbbSiang = netHbb.siang;
+                let layakHbbMalam = netHbb.malam;
+                let layakHrSiang  = netHr.siang;
+                let layakHrMalam  = netHr.malam;
+                let layakHkSiang  = netHk.siang;
+                let layakHkMalam  = netHk.malam;
 
                 if (weekWorkHours > 45) {
-                    // Situasi 2 (Muka Surat 143): Lebihan jam hakiki (>45j) dikira sebagai OT (HBB Siang 1.125)
+                    // Situasi 2 (M/S 143): Lebihan jam hakiki (>45j) dikira sebagai OT (HBB Siang 1.125)
                     surplusHours = weekWorkHours - 45;
                     surplusMoney = parseFloat((surplusHours * 1.125 * activeGuard.kadar).toFixed(2));
-                    takLayakSiang = 0;
-                    takLayakMalam = 0;
-                    layakSiang = netSiang;
-                    layakMalam = netMalam;
                 } else {
-                    // Kurang daripada 45 jam: Defisit diserap dari jam OT siang terlebih dahulu
+                    // Defisit jam hakiki (<45j): Diserap dari HBB Siang terlebih dahulu
                     const deficitFrom45 = Math.max(0, 45 - weekWorkHours);
-                    takLayakSiang = Math.min(deficitFrom45, netSiang);
-                    layakSiang = Math.max(0, netSiang - takLayakSiang);
-                    const remainingDeficit = deficitFrom45 - takLayakSiang;
-                    takLayakMalam = Math.min(remainingDeficit, netMalam);
-                    layakMalam = Math.max(0, netMalam - takLayakMalam);
+                    takLayakSiang = Math.min(deficitFrom45, layakHbbSiang);
+                    layakHbbSiang = Math.max(0, layakHbbSiang - takLayakSiang);
+                    const remDeficit = deficitFrom45 - takLayakSiang;
+                    takLayakMalam = Math.min(remDeficit, layakHbbMalam);
+                    layakHbbMalam = Math.max(0, layakHbbMalam - takLayakMalam);
                 }
 
-                const siangMoney = parseFloat((layakSiang * 1.125 * activeGuard.kadar).toFixed(2));
-                const malamMoney = parseFloat((layakMalam * 1.25 * activeGuard.kadar).toFixed(2));
-                const weekTotalElmMoney = surplusMoney + siangMoney + malamMoney;
+                // Rates per Pekeliling JPA 2024:
+                // HBB: Siang 1.125 | Malam 1.250
+                // HR:  Siang 1.250 | Malam 1.500
+                // HK:  Siang 1.750 | Malam 2.000
+                const hbbSiangMoney = parseFloat((layakHbbSiang * 1.125 * activeGuard.kadar).toFixed(2));
+                const hbbMalamMoney = parseFloat((layakHbbMalam * 1.250 * activeGuard.kadar).toFixed(2));
+                const hrSiangMoney  = parseFloat((layakHrSiang  * 1.250 * activeGuard.kadar).toFixed(2));
+                const hrMalamMoney  = parseFloat((layakHrMalam  * 1.500 * activeGuard.kadar).toFixed(2));
+                const hkSiangMoney  = parseFloat((layakHkSiang  * 1.750 * activeGuard.kadar).toFixed(2));
+                const hkMalamMoney  = parseFloat((layakHkMalam  * 2.000 * activeGuard.kadar).toFixed(2));
+
+                const weekTotalElmMoney = surplusMoney + hbbSiangMoney + hbbMalamMoney + hrSiangMoney + hrMalamMoney + hkSiangMoney + hkMalamMoney;
                 grandTotalElmMoney += weekTotalElmMoney;
 
                 const yr2Digit = (weekDates[w] && weekDates[w][0]) ? String(weekDates[w][0].yNum).slice(-2) : "26";
@@ -1163,18 +1733,18 @@
                     surplusHours: surplusHours,
                     surplusMoney: surplusMoney.toFixed(2),
                     weekWorkHours: weekWorkHours,
-                    netKlm: netKlm,
+                    netKlm: totalNet,
                     mark: weekMarks[w],
                     datesStr: otDates.join(", ") + "/" + yr2Digit,
                     takLayakHours: (takLayakSiang + takLayakMalam),
                     takLayakMoney: ((takLayakSiang * 1.125 + takLayakMalam * 1.25) * activeGuard.kadar).toFixed(2),
-                    layakSiangHours: layakSiang,
-                    layakSiangMoney: siangMoney.toFixed(2),
-                    layakMalamHours: layakMalam,
-                    layakMalamMoney: malamMoney.toFixed(2),
-                    totalWeekMoney: weekTotalElmMoney.toFixed(2),
-                    grossSiang: weekGrossSiang,
-                    grossMalam: weekGrossMalam
+                    
+                    // Category breakdown
+                    hbb: { net: netHbb.net, dates: catSlots.HBB.dates.join(", ") + "/" + yr2Digit, layakSiang: layakHbbSiang, siangMoney: hbbSiangMoney.toFixed(2), layakMalam: layakHbbMalam, malamMoney: hbbMalamMoney.toFixed(2) },
+                    hr:  { net: netHr.net,  dates: catSlots.HR.dates.join(", ") + "/" + yr2Digit,  layakSiang: layakHrSiang,  siangMoney: hrSiangMoney.toFixed(2),  layakMalam: layakHrMalam,  malamMoney: hrMalamMoney.toFixed(2) },
+                    hk:  { net: netHk.net,  dates: catSlots.HK.dates.join(", ") + "/" + yr2Digit,  layakSiang: layakHkSiang,  siangMoney: hkSiangMoney.toFixed(2),  layakMalam: layakHkMalam,  malamMoney: hkMalamMoney.toFixed(2) },
+                    
+                    totalWeekMoney: weekTotalElmMoney.toFixed(2)
                 });
 
                 const markStr = weekMarks[w];
@@ -1236,16 +1806,36 @@
             weekNetKlmList.forEach((item, idx) => {
                 const letter = String.fromCharCode(97 + idx);
                 const b = weekElmBreakdowns[idx];
+                let subIdx = 1;
+                let subItemsCount = (b.hasSurplus ? 1 : 0) + (item.hbb && item.hbb.gross > 0 ? 1 : 0) + (item.hr && item.hr.gross > 0 ? 1 : 0) + (item.hk && item.hk.gross > 0 ? 1 : 0);
+                let useSub = (subItemsCount > 1);
+
                 if (b.hasSurplus) {
-                    netKlmHtml += `(${letter}1) Lebihan ${b.surplusHours} Jam (${b.weekWorkHours}j – 45j)<br>`;
-                    if (item.gross > 0) {
-                        netKlmHtml += `(${letter}2) ${item.gross} Jam – ${item.rest} Jam${item.mark} = <strong>${item.net} Jam</strong><br>`;
-                    }
-                    formulaElmHtml += `(${letter}) [${activeGuard.kadar.toFixed(2)} x 1.125 x ${b.surplusHours}j] + KLM${item.mark}<br>`;
-                } else {
-                    netKlmHtml += `(${letter}) ${item.gross} Jam – ${item.rest} Jam${item.mark} = <strong>${item.net} Jam</strong><br>`;
-                    formulaElmHtml += `(${letter}) [${activeGuard.kadar.toFixed(2)} x pekali HBB x ${item.net} jam]${item.mark}<br>`;
+                    netKlmHtml += `(${letter}${useSub ? subIdx : ''}) Lebihan ${b.surplusHours} Jam (${b.weekWorkHours}j – 45j)<br>`;
+                    subIdx++;
                 }
+
+                if (item.hbb && item.hbb.gross > 0) {
+                    netKlmHtml += `(${letter}${useSub ? subIdx : ''}) ${item.hbb.gross} Jam – ${item.hbb.rest} Jam${item.mark} = <strong>${item.hbb.net} Jam (HBB)</strong><br>`;
+                    subIdx++;
+                }
+                if (item.hr && item.hr.gross > 0) {
+                    netKlmHtml += `(${letter}${useSub ? subIdx : ''}) ${item.hr.gross} Jam – ${item.hr.rest} Jam${item.mark} = <strong>${item.hr.net} Jam (HR)</strong><br>`;
+                    subIdx++;
+                }
+                if (item.hk && item.hk.gross > 0) {
+                    netKlmHtml += `(${letter}${useSub ? subIdx : ''}) ${item.hk.gross} Jam – ${item.hk.rest} Jam${item.mark} = <strong>${item.hk.net} Jam (HK)</strong><br>`;
+                    subIdx++;
+                }
+
+                // Formula description
+                let formParts = [];
+                if (b.hasSurplus) formParts.push(`[${activeGuard.kadar.toFixed(2)} x 1.125 x ${b.surplusHours}j]`);
+                if (item.hbb && item.hbb.net > 0) formParts.push(`[${activeGuard.kadar.toFixed(2)} x pekali HBB x ${item.hbb.net}j]`);
+                if (item.hr && item.hr.net > 0) formParts.push(`[${activeGuard.kadar.toFixed(2)} x pekali HR x ${item.hr.net}j]`);
+                if (item.hk && item.hk.net > 0) formParts.push(`[${activeGuard.kadar.toFixed(2)} x pekali HK x ${item.hk.net}j]`);
+                
+                formulaElmHtml += `(${letter}) ${formParts.join(" + ")}${item.mark}<br>`;
             });
             document.getElementById("p2RowNetKlm").innerHTML = netKlmHtml;
             document.getElementById("p2RowFormulaElm").innerHTML = formulaElmHtml;
@@ -1310,15 +1900,16 @@
                 const wGross = weekKlmGrossList[w];
                 const wTakLayakH = b.takLayakHours;
                 const wTakLayakM = parseFloat(b.takLayakMoney);
-                const wLayakH = (b.surplusHours || 0) + b.layakSiangHours + b.layakMalamHours;
+                
+                const wLayakH = (b.surplusHours || 0) + b.hbb.layakSiang + b.hbb.layakMalam + b.hr.layakSiang + b.hr.layakMalam + b.hk.layakSiang + b.hk.layakMalam;
                 const wPaidM = parseFloat(b.totalWeekMoney);
 
                 totalDefisitHours += wDefisit;
                 totalTakLayakHours += wTakLayakH;
                 totalTakLayakMoney += wTakLayakM;
                 totalLayakHours += wLayakH;
-                totalLayakSiangHours += (b.surplusHours || 0) + b.layakSiangHours;
-                totalLayakMalamHours += b.layakMalamHours;
+                totalLayakSiangHours += (b.surplusHours || 0) + b.hbb.layakSiang + b.hr.layakSiang + b.hk.layakSiang;
+                totalLayakMalamHours += b.hbb.layakMalam + b.hr.layakMalam + b.hk.layakMalam;
 
                 const statusSurplusOrDeficit = b.hasSurplus 
                     ? `<span class="text-emerald-700 font-bold">+${b.surplusHours}j (Lebihan OT)</span>`
@@ -1331,7 +1922,7 @@
                     <td class="text-center">${statusSurplusOrDeficit}</td>
                     <td class="text-center font-semibold">${wGross} Jam${b.mark}</td>
                     <td class="text-center text-red-700 font-bold">${wTakLayakH > 0 ? `${wTakLayakH} Jam (RM ${wTakLayakM.toFixed(2)})` : "-"}</td>
-                    <td class="text-center text-emerald-800 font-bold">${wLayakH} Jam <span class="text-[7.5pt] font-normal text-slate-500">(${b.surplusHours ? `${b.surplusHours}j Lebihan + ` : ""}${b.layakSiangHours}j S + ${b.layakMalamHours}j M)</span></td>
+                    <td class="text-center text-emerald-800 font-bold">${wLayakH} Jam</td>
                     <td class="text-center font-black text-blue-900">RM ${wPaidM.toFixed(2)}</td>
                 </tr>`;
             }
@@ -1354,19 +1945,20 @@
             document.getElementById("p4StatSilingStatus").textContent = isPassedCeiling ? `LULUS HAD SILING (RM ${activeGuard.siling.toFixed(2)})` : `MELEBIHI HAD SILING (RM ${activeGuard.siling.toFixed(2)})`;
 
             if (shouldSave) {
-                saveToLocalStorage();
+                saveCurrentRecord(true);
             }
         }
 
         function generateElmDetailRowsHtml(b) {
             let html = "";
+            let subIdx = 1;
             
+            // 1. SURPLUS HAKIKI LEBIHAN 45 JAM (SITUASI 2 M/S 143)
             if (b.hasSurplus) {
-                // PART 1: SURPLUS HAKIKI LEBIHAN 45 JAM (SITUASI 2 MUKA SURAT 143)
                 html += `
                 <tr>
                     <td class="text-left pl-2 font-semibold">
-                        (${b.weekLetter}1) ${b.surplusHours} jam<br>
+                        (${b.weekLetter}${subIdx}) ${b.surplusHours} jam<br>
                         <span class="text-[7.5pt] text-slate-600 font-normal">(Jumlah jam bekerja melebihi 45 jam)</span>
                     </td>
                     <td class="font-bold bg-slate-50">HBB</td>
@@ -1377,51 +1969,22 @@
                         = ${activeGuard.kadar.toFixed(2)} x 1.125 x ${b.surplusHours}<br>= RM${b.surplusMoney}
                     </td>
                 </tr>`;
+                subIdx++;
+            }
 
-                // PART 2: ARAHAN KLM BERTULIS
-                if (b.netKlm > 0) {
-                    const hasMalam = (b.layakMalamHours > 0);
-                    const rowspan = hasMalam ? "2" : "1";
-                    html += `
-                    <tr>
-                        <td rowspan="${rowspan}" class="text-left pl-2 font-semibold">
-                            (${b.weekLetter}2) ${b.netKlm} Jam${b.mark}<br>
-                            <span class="text-[7.5pt] text-slate-600 font-normal">KLM pada ${b.datesStr}</span>
-                        </td>
-                        <td class="font-bold bg-slate-50">HBB</td>
-                        <td class="font-bold bg-slate-50">Siang</td>
-                        <td class="font-bold bg-slate-50">1.125</td>
-                        <td style="font-weight:bold;">${b.layakSiangHours}</td>
-                        <td style="font-weight:bold; font-size:7.5pt;">
-                            = ${activeGuard.kadar.toFixed(2)} x 1.125 x ${b.layakSiangHours}<br>= RM${b.layakSiangMoney}
-                        </td>
-                    </tr>`;
-
-                    if (hasMalam) {
-                        html += `
-                        <tr>
-                            <td class="font-bold bg-slate-50">HBB</td>
-                            <td class="font-bold bg-slate-50">Malam</td>
-                            <td class="font-bold bg-slate-50">1.25</td>
-                            <td style="font-weight:bold;">${b.layakMalamHours}</td>
-                            <td style="font-weight:bold; font-size:7.5pt;">
-                                = ${activeGuard.kadar.toFixed(2)} x 1.25 x ${b.layakMalamHours}<br>= RM${b.layakMalamMoney}
-                            </td>
-                        </tr>`;
-                    }
-                }
-            } else {
-                // STANDARD DEFICIT WEEK / NO-SURPLUS WEEK
-                const hasMalam = (b.layakMalamHours > 0);
+            // 2. HBB (HARI BEKERJA BIASA) KLM
+            if (b.hbb && b.hbb.net > 0) {
+                const hasMalam = (b.hbb.layakMalam > 0);
                 const hasTakLayak = (b.takLayakHours > 0);
                 const rowspan = (hasTakLayak ? 1 : 0) + 1 + (hasMalam ? 1 : 0);
+                const prefixLabel = b.hasSurplus ? `(${b.weekLetter}${subIdx})` : `(${b.weekLetter})`;
 
                 html += `
                 <tr>
                     <td rowspan="${rowspan}" class="text-left pl-2 font-semibold">
-                        (${b.weekLetter}) ${b.netKlm} Jam${b.mark}<br>
-                        <span class="text-[7.5pt] text-slate-600 font-normal">KLM pada ${b.datesStr}</span><br>
-                        ${hasTakLayak ? `<span class="text-[7.5pt] text-rose-700 font-bold">(tak layak ELM ${b.takLayakHours} Jam)</span>` : ""}
+                        ${prefixLabel} ${b.hbb.net} Jam${b.mark}<br>
+                        <span class="text-[7.5pt] text-slate-600 font-normal">KLM pada ${b.hbb.dates}</span>
+                        ${hasTakLayak ? `<br><span class="text-[7.5pt] text-rose-700 font-bold">(tak layak ELM ${b.takLayakHours} Jam)</span>` : ""}
                     </td>`;
 
                 if (hasTakLayak) {
@@ -1438,9 +2001,9 @@
                     <td class="font-bold bg-slate-50">HBB</td>
                     <td class="font-bold bg-slate-50">Siang</td>
                     <td class="font-bold bg-slate-50">1.125</td>
-                    <td style="font-weight:bold;">${b.layakSiangHours}</td>
+                    <td style="font-weight:bold;">${b.hbb.layakSiang}</td>
                     <td style="font-weight:bold; font-size:7.5pt;">
-                        = ${activeGuard.kadar.toFixed(2)} x 1.125 x ${b.layakSiangHours}<br>= RM${b.layakSiangMoney}
+                        = ${activeGuard.kadar.toFixed(2)} x 1.125 x ${b.hbb.layakSiang}<br>= RM${b.hbb.siangMoney}
                     </td>
                 </tr>`;
                 } else {
@@ -1448,9 +2011,9 @@
                     <td class="font-bold bg-slate-50">HBB</td>
                     <td class="font-bold bg-slate-50">Siang</td>
                     <td class="font-bold bg-slate-50">1.125</td>
-                    <td style="font-weight:bold;">${b.layakSiangHours}</td>
+                    <td style="font-weight:bold;">${b.hbb.layakSiang}</td>
                     <td style="font-weight:bold; font-size:7.5pt;">
-                        = ${activeGuard.kadar.toFixed(2)} x 1.125 x ${b.layakSiangHours}<br>= RM${b.layakSiangMoney}
+                        = ${activeGuard.kadar.toFixed(2)} x 1.125 x ${b.hbb.layakSiang}<br>= RM${b.hbb.siangMoney}
                     </td>
                 </tr>`;
                 }
@@ -1461,82 +2024,642 @@
                         <td class="font-bold bg-slate-50">HBB</td>
                         <td class="font-bold bg-slate-50">Malam</td>
                         <td class="font-bold bg-slate-50">1.25</td>
-                        <td style="font-weight:bold;">${b.layakMalamHours}</td>
+                        <td style="font-weight:bold;">${b.hbb.layakMalam}</td>
                         <td style="font-weight:bold; font-size:7.5pt;">
-                            = ${activeGuard.kadar.toFixed(2)} x 1.25 x ${b.layakMalamHours}<br>= RM${b.layakMalamMoney}
+                            = ${activeGuard.kadar.toFixed(2)} x 1.25 x ${b.hbb.layakMalam}<br>= RM${b.hbb.malamMoney}
                         </td>
                     </tr>`;
                 }
+                subIdx++;
+            }
+
+            // 3. HR (HARI REHAT HRM/HKM) KLM (Pekali Siang 1.25 / Malam 1.50 - M/S 147-150)
+            if (b.hr && b.hr.net > 0) {
+                const hasMalam = (b.hr.layakMalam > 0);
+                const hasSiang = (b.hr.layakSiang > 0);
+                const rowspan = (hasSiang ? 1 : 0) + (hasMalam ? 1 : 0);
+                const prefixLabel = `(${b.weekLetter}${subIdx})`;
+
+                html += `
+                <tr>
+                    <td rowspan="${rowspan || 1}" class="text-left pl-2 font-semibold">
+                        ${prefixLabel} ${b.hr.net} Jam${b.mark}<br>
+                        <span class="text-[7.5pt] text-slate-600 font-normal">KLM pada ${b.hr.dates} (Hari Rehat)</span>
+                    </td>`;
+
+                if (hasSiang) {
+                    html += `
+                    <td class="font-bold bg-slate-50">HR</td>
+                    <td class="font-bold bg-slate-50">Siang</td>
+                    <td class="font-bold bg-slate-50">1.25</td>
+                    <td style="font-weight:bold;">${b.hr.layakSiang}</td>
+                    <td style="font-weight:bold; font-size:7.5pt;">
+                        = ${activeGuard.kadar.toFixed(2)} x 1.25 x ${b.hr.layakSiang}<br>= RM${b.hr.siangMoney}
+                    </td>
+                </tr>`;
+                }
+
+                if (hasMalam) {
+                    if (!hasSiang) {
+                        html += `
+                        <td class="font-bold bg-slate-50">HR</td>
+                        <td class="font-bold bg-slate-50">Malam</td>
+                        <td class="font-bold bg-slate-50">1.5</td>
+                        <td style="font-weight:bold;">${b.hr.layakMalam}</td>
+                        <td style="font-weight:bold; font-size:7.5pt;">
+                            = ${activeGuard.kadar.toFixed(2)} x 1.5 x ${b.hr.layakMalam}<br>= RM${b.hr.malamMoney}
+                        </td>
+                    </tr>`;
+                    } else {
+                        html += `
+                        <tr>
+                            <td class="font-bold bg-slate-50">HR</td>
+                            <td class="font-bold bg-slate-50">Malam</td>
+                            <td class="font-bold bg-slate-50">1.5</td>
+                            <td style="font-weight:bold;">${b.hr.layakMalam}</td>
+                            <td style="font-weight:bold; font-size:7.5pt;">
+                                = ${activeGuard.kadar.toFixed(2)} x 1.5 x ${b.hr.layakMalam}<br>= RM${b.hr.malamMoney}
+                            </td>
+                        </tr>`;
+                    }
+                }
+                subIdx++;
+            }
+
+            // 4. HK (HARI KELEPASAN AM HKA) KLM (Pekali Siang 1.75 / Malam 2.00 - M/S 149-150)
+            if (b.hk && b.hk.net > 0) {
+                const hasMalam = (b.hk.layakMalam > 0);
+                const hasSiang = (b.hk.layakSiang > 0);
+                const rowspan = (hasSiang ? 1 : 0) + (hasMalam ? 1 : 0);
+                const prefixLabel = `(${b.weekLetter}${subIdx})`;
+
+                html += `
+                <tr>
+                    <td rowspan="${rowspan || 1}" class="text-left pl-2 font-semibold">
+                        ${prefixLabel} ${b.hk.net} Jam${b.mark}<br>
+                        <span class="text-[7.5pt] text-slate-600 font-normal">KLM pada ${b.hk.dates} (Hari Kelepasan Am)</span>
+                    </td>`;
+
+                if (hasSiang) {
+                    html += `
+                    <td class="font-bold bg-slate-50">HK</td>
+                    <td class="font-bold bg-slate-50">Siang</td>
+                    <td class="font-bold bg-slate-50">1.75</td>
+                    <td style="font-weight:bold;">${b.hk.layakSiang}</td>
+                    <td style="font-weight:bold; font-size:7.5pt;">
+                        = ${activeGuard.kadar.toFixed(2)} x 1.75 x ${b.hk.layakSiang}<br>= RM${b.hk.siangMoney}
+                    </td>
+                </tr>`;
+                }
+
+                if (hasMalam) {
+                    if (!hasSiang) {
+                        html += `
+                        <td class="font-bold bg-slate-50">HK</td>
+                        <td class="font-bold bg-slate-50">Malam</td>
+                        <td class="font-bold bg-slate-50">2.0</td>
+                        <td style="font-weight:bold;">${b.hk.layakMalam}</td>
+                        <td style="font-weight:bold; font-size:7.5pt;">
+                            = ${activeGuard.kadar.toFixed(2)} x 2.0 x ${b.hk.layakMalam}<br>= RM${b.hk.malamMoney}
+                        </td>
+                    </tr>`;
+                    } else {
+                        html += `
+                        <tr>
+                            <td class="font-bold bg-slate-50">HK</td>
+                            <td class="font-bold bg-slate-50">Malam</td>
+                            <td class="font-bold bg-slate-50">2.0</td>
+                            <td style="font-weight:bold;">${b.hk.layakMalam}</td>
+                            <td style="font-weight:bold; font-size:7.5pt;">
+                                = ${activeGuard.kadar.toFixed(2)} x 2.0 x ${b.hk.layakMalam}<br>= RM${b.hk.malamMoney}
+                            </td>
+                        </tr>`;
+                    }
+                }
+                subIdx++;
             }
 
             return html;
         }
 
         // =========================================================================
-        // LOCALSTORAGE PERSISTENCE (AUTO-SAVE & RESTORE)
+        // MULTI-MONTH & MULTI-STAFF DATABASE ENGINE (LOCAL STORAGE)
         // =========================================================================
-        const STORAGE_KEY = "BORANG_OT_PERSISTED_STATE_V2";
+        const DB_INDEX_KEY = "BORANG_OT_RECORDS_INDEX_V2";
+        const DB_RECORD_PREFIX = "BORANG_OT_REC_";
+        const DB_LAST_ACTIVE_KEY = "BORANG_OT_LAST_ACTIVE_V2";
 
-        function saveToLocalStorage() {
+        function getRecordKey(guardId, year, month) {
+            return `${DB_RECORD_PREFIX}${guardId}_${year}_${month}`;
+        }
+
+        function hasRecord(key) {
+            return !!localStorage.getItem(key);
+        }
+
+        function getAllSavedRecordsIndex() {
             try {
-                const state = {
-                    guardId: document.getElementById("guardSelect").value,
-                    year: document.getElementById("yearSelect").value,
-                    month: document.getElementById("monthSelect").value,
-                    startDate: document.getElementById("startDatePicker").value,
-                    customProfile: activeGuard,
-                    weekScheduleData: weekScheduleData
-                };
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+                const raw = localStorage.getItem(DB_INDEX_KEY);
+                return raw ? JSON.parse(raw) : [];
             } catch (e) {
-                console.warn("Storage error:", e);
+                console.warn("Error reading records index:", e);
+                return [];
             }
         }
 
-        function loadFromLocalStorage() {
+        function updateSavedCountBadge() {
+            const list = getAllSavedRecordsIndex();
+            const badge = document.getElementById("savedCountBadge");
+            if (badge) badge.textContent = list.length;
+            const modalLabel = document.getElementById("modalRecordsCountLabel");
+            if (modalLabel) modalLabel.textContent = list.length;
+        }
+
+        function updateActiveRecordBadge() {
+            const badge = document.getElementById("activeRecordBadge");
+            if (!badge) return;
+            const y = document.getElementById("yearSelect").value;
+            const m = document.getElementById("monthSelect").value;
+            const mNames = ["JANUARI", "FEBRUARI", "MAC", "APRIL", "MEI", "JUN", "JULAI", "OGOS", "SEPTEMBER", "OKTOBER", "NOVEMBER", "DISEMBER"];
+            const monthName = mNames[parseInt(m) - 1] || "BULAN";
+            badge.textContent = `${activeGuard.name} (${monthName} ${y})`;
+        }
+
+        function showToast(message, type = "success") {
+            const container = document.getElementById("toastContainer");
+            if (!container) return;
+            const toast = document.createElement("div");
+            const isError = (type === "error");
+            toast.className = `px-4 py-2.5 rounded-xl shadow-xl text-xs font-bold flex items-center gap-2 transform transition-all duration-300 pointer-events-auto border ${
+                isError 
+                    ? "bg-rose-950 text-white border-rose-700 animate-in slide-in-from-bottom" 
+                    : "bg-slate-900 text-white border-blue-500/50 animate-in slide-in-from-bottom"
+            }`;
+            toast.innerHTML = `
+                <i class="fa-solid ${isError ? 'fa-circle-exclamation text-rose-400' : 'fa-circle-check text-emerald-400'}"></i>
+                <span>${message}</span>
+            `;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.classList.add("opacity-0", "translate-y-2");
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function saveCurrentRecord(silent = false) {
             try {
-                const raw = localStorage.getItem(STORAGE_KEY);
-                if (raw) {
-                    const state = JSON.parse(raw);
-                    if (state && state.weekScheduleData && state.weekScheduleData.length === 4) {
-                        document.getElementById("guardSelect").value = state.guardId || "1";
-                        document.getElementById("yearSelect").value = state.year || "2026";
-                        document.getElementById("monthSelect").value = state.month || "7";
-                        document.getElementById("startDatePicker").value = state.startDate || "2026-07-06";
-                        
-                        if (state.customProfile) {
-                            activeGuard = state.customProfile;
-                        } else {
-                            activeGuard = JSON.parse(JSON.stringify(GUARDS_LIST[parseInt(state.guardId) || 1]));
-                        }
-                        updateProfileInputs();
+                const gId = document.getElementById("guardSelect").value || "1";
+                const y = document.getElementById("yearSelect").value || "2026";
+                const m = document.getElementById("monthSelect").value || "1";
+                const key = getRecordKey(gId, y, m);
 
-                        const [y, m, d] = (state.startDate || "2026-07-06").split('-').map(Number);
-                        const startMon = new Date(y, m - 1, d);
-                        generateWeekDates(startMon);
+                const recordPayload = {
+                    id: key,
+                    guardId: gId,
+                    guardName: activeGuard.name,
+                    year: y,
+                    month: m,
+                    monthLabel: document.getElementById("lblMonthHeader").textContent || "",
+                    startDate: document.getElementById("startDatePicker").value,
+                    customProfile: activeGuard,
+                    weekScheduleData: weekScheduleData,
+                    grandTotalMoney: document.getElementById("docTotalElmPaid")?.textContent || "RM 0.00",
+                    totalHakikiHours: document.getElementById("sumHakikiHours")?.textContent || "0 Jam",
+                    totalGrossKlm: document.getElementById("sumKlmGrossHours")?.textContent || "0 Jam",
+                    totalNetKlm: document.getElementById("sumKlmNetHours")?.textContent || "0 Jam",
+                    savedAt: new Date().toISOString()
+                };
 
-                        const mNames = ["JANUARI", "FEBRUARI", "MAC", "APRIL", "MEI", "JUN", "JULAI", "OGOS", "SEPTEMBER", "OKTOBER", "NOVEMBER", "DISEMBER"];
-                        const curM = startMon.getMonth() + 1;
-                        const curY = startMon.getFullYear();
-                        const nextM = (curM === 12) ? 1 : (curM + 1);
-                        const nextY = (curM === 12) ? (curY + 1) : curY;
-                        document.getElementById("lblMonthHeader").textContent = `${mNames[curM-1]} ${curY} / ${mNames[nextM-1]} ${nextY}`;
+                // 1. Save data record
+                localStorage.setItem(key, JSON.stringify(recordPayload));
+                localStorage.setItem(DB_LAST_ACTIVE_KEY, key);
 
-                        weekScheduleData = state.weekScheduleData;
-                        calculateAndRenderAll(false);
-                        return true;
+                // 2. Update Index
+                let indexList = getAllSavedRecordsIndex();
+                const existingIdx = indexList.findIndex(r => r.id === key);
+                const metaSummary = {
+                    id: key,
+                    guardId: gId,
+                    guardName: activeGuard.name,
+                    year: y,
+                    month: m,
+                    monthLabel: recordPayload.monthLabel,
+                    startDate: recordPayload.startDate,
+                    grandTotalMoney: recordPayload.grandTotalMoney,
+                    totalHakikiHours: recordPayload.totalHakikiHours,
+                    totalGrossKlm: recordPayload.totalGrossKlm,
+                    totalNetKlm: recordPayload.totalNetKlm,
+                    savedAt: recordPayload.savedAt
+                };
+
+                if (existingIdx >= 0) {
+                    indexList[existingIdx] = metaSummary;
+                } else {
+                    indexList.unshift(metaSummary);
+                }
+
+                localStorage.setItem(DB_INDEX_KEY, JSON.stringify(indexList));
+                updateSavedCountBadge();
+                updateActiveRecordBadge();
+
+                // Push to Cloud
+                syncRecordToCloud(recordPayload);
+
+                if (!silent) {
+                    showToast(`✅ Rekod ${activeGuard.name} (${recordPayload.monthLabel}) berjaya disimpan!`);
+                }
+                return true;
+            } catch (e) {
+                console.warn("Save record error:", e);
+                if (!silent) showToast(`❌ Ralat simpan: ${e.message}`, "error");
+                return false;
+            }
+        }
+
+        function loadRecordByKey(key, showNotification = true) {
+            try {
+                const raw = localStorage.getItem(key);
+                if (!raw) return false;
+                const record = JSON.parse(raw);
+                if (!record || !record.weekScheduleData || record.weekScheduleData.length !== 4) return false;
+
+                document.getElementById("guardSelect").value = record.guardId || "1";
+                document.getElementById("yearSelect").value = record.year || "2026";
+                document.getElementById("monthSelect").value = record.month || "1";
+                document.getElementById("startDatePicker").value = record.startDate || "2026-07-06";
+
+                if (record.customProfile) {
+                    activeGuard = record.customProfile;
+                } else {
+                    activeGuard = JSON.parse(JSON.stringify(GUARDS_LIST[parseInt(record.guardId) || 1]));
+                }
+                updateProfileInputs();
+
+                const [y, m, d] = (record.startDate || "2026-07-06").split('-').map(Number);
+                const startMon = new Date(y, m - 1, d);
+                generateWeekDates(startMon);
+                updatePeriodHeaderLabel();
+
+                weekScheduleData = record.weekScheduleData;
+                calculateAndRenderAll(false);
+
+                localStorage.setItem(DB_LAST_ACTIVE_KEY, key);
+                updateActiveRecordBadge();
+                updateSavedCountBadge();
+
+                if (showNotification) {
+                    showToast(`📂 Rekod ${activeGuard.name} (${record.monthLabel || 'Bulan ' + record.month}) dimuatkan.`);
+                }
+                return true;
+            } catch (e) {
+                console.warn("Load record error:", e);
+                return false;
+            }
+        }
+
+        function deleteRecordByKey(key) {
+            if (!confirm("Adakah anda pasti mahu memadamkan rekod ini dari pangkalan simpanan?")) return;
+            try {
+                localStorage.removeItem(key);
+                let indexList = getAllSavedRecordsIndex();
+                indexList = indexList.filter(r => r.id !== key);
+                localStorage.setItem(DB_INDEX_KEY, JSON.stringify(indexList));
+
+                // Delete from cloud if connected
+                if (firebaseDb && isCloudConnected) {
+                    firebaseDb.ref(`ot_claims_v2/${key}`).remove();
+                    firebaseDb.ref(`ot_index_v2/${key}`).remove();
+                }
+
+                renderSavedRecordsTable();
+                updateSavedCountBadge();
+                showToast("🗑️ Rekod berjaya dipadam.");
+            } catch (e) {
+                showToast(`❌ Ralat memadam: ${e.message}`, "error");
+            }
+        }
+
+        function initDefaultCleanSchedule() {
+            weekScheduleData = [];
+            for (let w = 0; w < 4; w++) {
+                let week = [];
+                for (let d = 0; d < 7; d++) {
+                    if (d < 5) {
+                        week.push({ hakiki: "8 Jam\n8.00 Am – 4.00 Pm", hHours: 8, klm: "", kGross: 0, kSiang: 0, kMalam: 0 });
+                    } else if (d === 5) {
+                        week.push({ hakiki: "HRM", hHours: 0, klm: "", kGross: 0, kSiang: 0, kMalam: 0 });
+                    } else {
+                        week.push({ hakiki: "HKM", hHours: 0, klm: "", kGross: 0, kSiang: 0, kMalam: 0 });
                     }
                 }
-            } catch (e) {
-                console.warn("Error loading stored state:", e);
+                weekScheduleData.push(week);
             }
-            return false;
+        }
+
+        function seedDefaultRecordsIfEmpty() {
+            let indexList = getAllSavedRecordsIndex();
+            
+            // Seed 1: Adnan Januari 2026 (RM 1510.50)
+            const janKey = getRecordKey("1", "2026", "1");
+            if (!localStorage.getItem(janKey)) {
+                const janAdnanProfile = JSON.parse(JSON.stringify(GUARDS_LIST[1]));
+                janAdnanProfile.gaji = 3108.19;
+                janAdnanProfile.kadar = 14.90;
+                janAdnanProfile.siling = 1036.06;
+
+                const janPayload = {
+                    id: janKey,
+                    guardId: "1",
+                    guardName: "ADNAN BIN AWANG",
+                    year: "2026",
+                    month: "1",
+                    monthLabel: "JANUARI 2026 / FEBRUARI 2026",
+                    startDate: "2026-01-29",
+                    customProfile: janAdnanProfile,
+                    weekScheduleData: [
+                        // Week 1
+                        [
+                            { hakiki: "8 Jam\n4.00 Pm – 12.00 Am", hHours: 8, klm: "", kGross: 0, kSiang: 0, kMalam: 0 },
+                            { hakiki: "8 Jam\n4.00 Pm – 12.00 Am", hHours: 8, klm: "", kGross: 0, kSiang: 0, kMalam: 0 },
+                            { hakiki: "8 Jam\n8.00 Am – 4.00 Pm", hHours: 8, klm: "", kGross: 0, kSiang: 0, kMalam: 0 },
+                            { hakiki: "HKA", hHours: 0, klm: "16 Jam\n8.00 Am – 4.00 Pm\n4.00 Pm – 12.00 Am", kGross: 16, kSiang: 13, kMalam: 2 },
+                            { hakiki: "HKA", hHours: 0, klm: "8 Jam\n8.00 Am – 4.00 Pm", kGross: 8, kSiang: 7, kMalam: 0 },
+                            { hakiki: "8 Jam\n12.00 Am – 8.00Am", hHours: 8, klm: "", kGross: 0, kSiang: 0, kMalam: 0 },
+                            { hakiki: "8 Jam\n12.00 Am – 8.00Am", hHours: 8, klm: "8 Jam\n8.00 Am – 4.00 Pm", kGross: 8, kSiang: 7, kMalam: 0 }
+                        ],
+                        // Week 2
+                        [
+                            { hakiki: "HRM", hHours: 0, klm: "", kGross: 0, kSiang: 0, kMalam: 0 },
+                            { hakiki: "HKM", hHours: 0, klm: "", kGross: 0, kSiang: 0, kMalam: 0 },
+                            { hakiki: "8 Jam\n4.00 Pm – 12.00 Am", hHours: 8, klm: "", kGross: 0, kSiang: 0, kMalam: 0 },
+                            { hakiki: "8 Jam\n4.00 Pm – 12.00 Am", hHours: 8, klm: "8 Jam\n12.00 Am – 8.00 Am", kGross: 8, kSiang: 2, kMalam: 5 },
+                            { hakiki: "8 Jam\n8.00 Am – 4.00 Pm", hHours: 8, klm: "8 Jam\n4.00 Pm – 12.00 Am", kGross: 8, kSiang: 5, kMalam: 2 },
+                            { hakiki: "8 Jam\n8.00 Am – 4.00 Pm", hHours: 8, klm: "8 Jam\n4.00 Pm – 12.00 Am", kGross: 8, kSiang: 5, kMalam: 2 },
+                            { hakiki: "8 Jam\n12.00 Am – 8.00Am", hHours: 8, klm: "8 Jam\n8.00 Am – 4.00 Pm", kGross: 8, kSiang: 7, kMalam: 0 }
+                        ],
+                        // Week 3
+                        [
+                            { hakiki: "8 Jam\n12.00 Am – 8.00Am", hHours: 8, klm: "8 Jam\n8.00 Am – 4.00 Pm", kGross: 8, kSiang: 7, kMalam: 0 },
+                            { hakiki: "HRM", hHours: 0, klm: "", kGross: 0, kSiang: 0, kMalam: 0 },
+                            { hakiki: "HKM", hHours: 0, klm: "", kGross: 0, kSiang: 0, kMalam: 0 },
+                            { hakiki: "8 Jam\n4.00 Pm – 12.00 Am", hHours: 8, klm: "", kGross: 0, kSiang: 0, kMalam: 0 },
+                            { hakiki: "8 Jam\n4.00 Pm – 12.00 Am", hHours: 8, klm: "", kGross: 0, kSiang: 0, kMalam: 0 },
+                            { hakiki: "HKA", hHours: 0, klm: "8 Jam\n8.00 Am – 4.00 Pm", kGross: 8, kSiang: 7, kMalam: 0 },
+                            { hakiki: "HKA", hHours: 0, klm: "8 Jam\n8.00 Am – 4.00 Pm", kGross: 8, kSiang: 7, kMalam: 0 }
+                        ],
+                        // Week 4
+                        [
+                            { hakiki: "8 Jam\n12.00 Am – 8.00Am", hHours: 8, klm: "8 Jam\n4.00 Pm – 12.00 Am", kGross: 8, kSiang: 5, kMalam: 2 },
+                            { hakiki: "8 Jam\n12.00 Am – 8.00Am", hHours: 8, klm: "", kGross: 0, kSiang: 0, kMalam: 0 },
+                            { hakiki: "HRM", hHours: 0, klm: "", kGross: 0, kSiang: 0, kMalam: 0 },
+                            { hakiki: "HKM", hHours: 0, klm: "", kGross: 0, kSiang: 0, kMalam: 0 },
+                            { hakiki: "8 Jam\n4.00 Pm – 12.00 Am", hHours: 8, klm: "", kGross: 0, kSiang: 0, kMalam: 0 },
+                            { hakiki: "8 Jam\n4.00 Pm – 12.00 Am", hHours: 8, klm: "8 Jam\n8.00 Am – 4.00 Pm", kGross: 8, kSiang: 7, kMalam: 0 },
+                            { hakiki: "8 Jam\n8.00 Am – 4.00 Pm", hHours: 8, klm: "", kGross: 0, kSiang: 0, kMalam: 0 }
+                        ]
+                    ],
+                    grandTotalMoney: "RM 1,510.50",
+                    totalHakikiHours: "144 Jam",
+                    totalGrossKlm: "104 Jam",
+                    totalNetKlm: "69 Jam",
+                    savedAt: new Date().toISOString()
+                };
+                localStorage.setItem(janKey, JSON.stringify(janPayload));
+                indexList.push({
+                    id: janKey,
+                    guardId: "1",
+                    guardName: "ADNAN BIN AWANG",
+                    year: "2026",
+                    month: "1",
+                    monthLabel: janPayload.monthLabel,
+                    startDate: janPayload.startDate,
+                    grandTotalMoney: janPayload.grandTotalMoney,
+                    totalHakikiHours: janPayload.totalHakikiHours,
+                    totalGrossKlm: janPayload.totalGrossKlm,
+                    totalNetKlm: janPayload.totalNetKlm,
+                    savedAt: janPayload.savedAt
+                });
+            }
+
+            localStorage.setItem(DB_INDEX_KEY, JSON.stringify(indexList));
+            updateSavedCountBadge();
+        }
+
+        // =========================================================================
+        // RECORDS MODAL UI & BACKUP/RESTORE
+        // =========================================================================
+        function openRecordsModal() {
+            renderSavedRecordsTable();
+            document.getElementById("recordsManagerModal").classList.remove("hidden");
+        }
+
+        function closeRecordsModal() {
+            document.getElementById("recordsManagerModal").classList.add("hidden");
+        }
+
+        function renderSavedRecordsTable() {
+            const list = getAllSavedRecordsIndex();
+            const container = document.getElementById("savedRecordsTableContainer");
+            const searchTxt = (document.getElementById("recordSearchInput")?.value || "").toLowerCase().trim();
+
+            const filtered = list.filter(r => {
+                if (!searchTxt) return true;
+                const matchName = (r.guardName || "").toLowerCase().includes(searchTxt);
+                const matchMonth = (r.monthLabel || "").toLowerCase().includes(searchTxt);
+                const matchYear = String(r.year || "").includes(searchTxt);
+                return matchName || matchMonth || matchYear;
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-10 text-slate-400">
+                        <i class="fa-solid fa-folder-open text-4xl mb-2 text-slate-300"></i>
+                        <p class="text-sm font-semibold">Tiada rekod tuntutan ditemui.</p>
+                        <p class="text-xs text-slate-400 mt-1">Sila tekan butang <strong>"Simpan Rekod Ini"</strong> untuk menyimpan borang bulan semasa.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = `
+            <table class="w-full text-xs text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
+                        <th class="py-2.5 px-3">Pegawai / Anggota</th>
+                        <th class="py-2.5 px-3">Bulan &amp; Tahun</th>
+                        <th class="py-2.5 px-3 text-center">Tarikh Mula</th>
+                        <th class="py-2.5 px-3 text-center">Jam OT</th>
+                        <th class="py-2.5 px-3 text-right">Jumlah ELM</th>
+                        <th class="py-2.5 px-3 text-center">Tindakan</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+            `;
+
+            filtered.forEach(r => {
+                const currentKey = getRecordKey(document.getElementById("guardSelect").value, document.getElementById("yearSelect").value, document.getElementById("monthSelect").value);
+                const isCurrentActive = (r.id === currentKey);
+                html += `
+                <tr class="hover:bg-blue-50/50 transition ${isCurrentActive ? 'bg-blue-50/80 font-semibold' : ''}">
+                    <td class="py-3 px-3">
+                        <span class="font-bold text-slate-900">${r.guardName}</span>
+                        ${isCurrentActive ? '<span class="ml-2 bg-blue-600 text-white text-[9.5px] px-1.5 py-0.5 rounded font-black">SEDANG AKTIF</span>' : ''}
+                    </td>
+                    <td class="py-3 px-3">
+                        <span class="text-blue-900 font-bold">${r.monthLabel || r.month + '/' + r.year}</span>
+                    </td>
+                    <td class="py-3 px-3 text-center text-slate-600 font-mono">
+                        ${r.startDate || '-'}
+                    </td>
+                    <td class="py-3 px-3 text-center">
+                        <span class="font-semibold text-slate-700">${r.totalGrossKlm || '-'}</span>
+                    </td>
+                    <td class="py-3 px-3 text-right">
+                        <span class="font-black text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">${r.grandTotalMoney}</span>
+                    </td>
+                    <td class="py-3 px-3 text-center">
+                        <div class="flex items-center justify-center gap-1.5">
+                            <button onclick="loadRecordByKey('${r.id}', true); closeRecordsModal();" class="bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1 rounded text-xs font-bold transition shadow-sm flex items-center gap-1">
+                                <i class="fa-solid fa-arrow-up-right-from-square"></i> Buka
+                            </button>
+                            <button onclick="exportSingleRecordJson('${r.id}')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-1 rounded text-xs transition border border-slate-300" title="Muat Turun .json">
+                                <i class="fa-solid fa-download"></i>
+                            </button>
+                            <button onclick="deleteRecordByKey('${r.id}')" class="bg-rose-50 hover:bg-rose-100 text-rose-700 px-2 py-1 rounded text-xs transition border border-rose-200" title="Padam Rekod">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                `;
+            });
+
+            html += `</tbody></table>`;
+            container.innerHTML = html;
+        }
+
+        function exportSingleRecordJson(key) {
+            const raw = localStorage.getItem(key);
+            if (!raw) return;
+            const record = JSON.parse(raw);
+            const fileName = `OT_${record.guardName.replace(/\s+/g, '_')}_${record.year}_Bulan${record.month}.json`;
+            
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(raw);
+            const dlAnchor = document.createElement('a');
+            dlAnchor.setAttribute("href", dataStr);
+            dlAnchor.setAttribute("download", fileName);
+            document.body.appendChild(dlAnchor);
+            dlAnchor.click();
+            dlAnchor.remove();
+            showToast(`📥 Fail ${fileName} dimuat turun.`);
+        }
+
+        function exportAllRecordsToJson() {
+            const indexList = getAllSavedRecordsIndex();
+            const allData = {
+                exportedAt: new Date().toISOString(),
+                version: "2.0",
+                recordsIndex: indexList,
+                records: {}
+            };
+
+            indexList.forEach(r => {
+                const raw = localStorage.getItem(r.id);
+                if (raw) allData.records[r.id] = JSON.parse(raw);
+            });
+
+            const fileName = `BACKUP_SEMUA_REKOD_OT_${new Date().toISOString().slice(0,10)}.json`;
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(allData, null, 2));
+            const dlAnchor = document.createElement('a');
+            dlAnchor.setAttribute("href", dataStr);
+            dlAnchor.setAttribute("download", fileName);
+            document.body.appendChild(dlAnchor);
+            dlAnchor.click();
+            dlAnchor.remove();
+            showToast(`📦 Backup semua rekod (${indexList.length} rekod) berjaya dimuat turun!`);
+        }
+
+        function importRecordsFromJson(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    let importCount = 0;
+
+                    if (parsed.records && typeof parsed.records === "object") {
+                        // Full Backup Package
+                        let curIndex = getAllSavedRecordsIndex();
+                        Object.keys(parsed.records).forEach(key => {
+                            const rec = parsed.records[key];
+                            localStorage.setItem(key, JSON.stringify(rec));
+                            
+                            const meta = {
+                                id: key,
+                                guardId: rec.guardId,
+                                guardName: rec.guardName || (rec.customProfile ? rec.customProfile.name : "Pegawai"),
+                                year: rec.year,
+                                month: rec.month,
+                                monthLabel: rec.monthLabel,
+                                startDate: rec.startDate,
+                                grandTotalMoney: rec.grandTotalMoney,
+                                totalHakikiHours: rec.totalHakikiHours,
+                                totalGrossKlm: rec.totalGrossKlm,
+                                totalNetKlm: rec.totalNetKlm,
+                                savedAt: rec.savedAt || new Date().toISOString()
+                            };
+
+                            const existIdx = curIndex.findIndex(x => x.id === key);
+                            if (existIdx >= 0) curIndex[existIdx] = meta;
+                            else curIndex.unshift(meta);
+                            importCount++;
+                        });
+                        localStorage.setItem(DB_INDEX_KEY, JSON.stringify(curIndex));
+                    } else if (parsed.id && parsed.weekScheduleData) {
+                        // Single Record File
+                        localStorage.setItem(parsed.id, JSON.stringify(parsed));
+                        let curIndex = getAllSavedRecordsIndex();
+                        const meta = {
+                            id: parsed.id,
+                            guardId: parsed.guardId,
+                            guardName: parsed.guardName || (parsed.customProfile ? parsed.customProfile.name : "Pegawai"),
+                            year: parsed.year,
+                            month: parsed.month,
+                            monthLabel: parsed.monthLabel,
+                            startDate: parsed.startDate,
+                            grandTotalMoney: parsed.grandTotalMoney,
+                            totalHakikiHours: parsed.totalHakikiHours,
+                            totalGrossKlm: parsed.totalGrossKlm,
+                            totalNetKlm: parsed.totalNetKlm,
+                            savedAt: parsed.savedAt || new Date().toISOString()
+                        };
+                        const existIdx = curIndex.findIndex(x => x.id === parsed.id);
+                        if (existIdx >= 0) curIndex[existIdx] = meta;
+                        else curIndex.unshift(meta);
+                        localStorage.setItem(DB_INDEX_KEY, JSON.stringify(curIndex));
+                        importCount = 1;
+                        loadRecordByKey(parsed.id, true);
+                    } else {
+                        throw new Error("Format fail JSON tidak sah.");
+                    }
+
+                    renderSavedRecordsTable();
+                    updateSavedCountBadge();
+                    showToast(`✅ Berjaya memuat naik ${importCount} rekod tuntutan!`);
+                } catch (err) {
+                    showToast(`❌ Gagal import fail: ${err.message}`, "error");
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = ""; // reset file input
         }
 
         function resetToDefaultSample() {
-            if (confirm("Adakah anda pasti mahu memuat semula data contoh rasmi (Adnan - Julai/Ogos 2026)? Sebarang perubahan semasa akan digantikan.")) {
-                localStorage.removeItem(STORAGE_KEY);
+            if (confirm("Adakah anda pasti mahu memuat semula data contoh rasmi (Adnan - Julai/Ogos 2026)?")) {
                 loadOfficialSampleAdnan();
+                saveCurrentRecord(false);
             }
         }
 
@@ -1552,6 +2675,8 @@
             const isHakikiHRM = (hakikiText === "HRM");
             const isHakikiHKM = (hakikiText === "HKM");
             const isHakikiHKA = (hakikiText === "HKA");
+            const isHakikiCR = (hakikiText.startsWith("CR"));
+            const isHakikiCS = (hakikiText.startsWith("CS"));
             const isHakikiNone = (!hakikiText || hakikiText === "-" || (tempModalHakiki.hours === 0 && !isHakikiHRM && !isHakikiHKM && !isHakikiHKA));
 
             const hakikiBtns = [
@@ -1561,7 +2686,9 @@
                 { id: "btnHakiki_NONE", label: "Tiada Syif (0j)", active: isHakikiNone },
                 { id: "btnHakiki_HRM", label: "HRM (Rehat)", active: isHakikiHRM },
                 { id: "btnHakiki_HKM", label: "HKM (Kelepasan)", active: isHakikiHKM },
-                { id: "btnHakiki_HKA", label: "HKA (Cuti Am)", active: isHakikiHKA }
+                { id: "btnHakiki_HKA", label: "HKA (Cuti Am)", active: isHakikiHKA },
+                { id: "btnHakiki_CR", label: "CR (Cuti Rehat 8j)", active: isHakikiCR },
+                { id: "btnHakiki_CS", label: "CS (Cuti Sakit 8j)", active: isHakikiCS }
             ];
 
             let hakikiLabel = "Tiada Syif";
@@ -1701,6 +2828,583 @@
 
             closeEditModal();
             calculateAndRenderAll(true);
+        }
+
+        // =========================================================================
+        // GOOGLE FIREBASE CLOUD DATABASE SYNC ENGINE (REAL-TIME MULTI-PC)
+        // =========================================================================
+        const DEFAULT_FIREBASE_CONFIG = {
+            apiKey: "AIzaSy_demo_ot_system_key",
+            authDomain: "ot-keselamatan-jpa.firebaseapp.com",
+            databaseURL: "https://ot-keselamatan-jpa-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "ot-keselamatan-jpa",
+            storageBucket: "ot-keselamatan-jpa.appspot.com"
+        };
+
+        const CLOUD_CONFIG_STORAGE_KEY = "BORANG_OT_FIREBASE_CONFIG_V2";
+        let firebaseApp = null;
+        let firebaseDb = null;
+        let isCloudConnected = false;
+        let cloudListenerActive = false;
+
+        function getActiveFirebaseConfig() {
+            try {
+                const stored = localStorage.getItem(CLOUD_CONFIG_STORAGE_KEY);
+                if (stored) return JSON.parse(stored);
+            } catch (e) {}
+            return DEFAULT_FIREBASE_CONFIG;
+        }
+
+        function initFirebaseCloud() {
+            try {
+                if (typeof firebase === "undefined") {
+                    updateCloudUIStatus(false, "Mod Tempatan (Offline)");
+                    return;
+                }
+
+                const config = getActiveFirebaseConfig();
+                if (!config || !config.databaseURL) {
+                    updateCloudUIStatus(false, "Mod Tempatan");
+                    return;
+                }
+
+                if (!firebase.apps.length) {
+                    firebaseApp = firebase.initializeApp(config);
+                } else {
+                    firebaseApp = firebase.app();
+                }
+
+                firebaseDb = firebase.database();
+                
+                // Monitor connection state
+                const connectedRef = firebaseDb.ref(".info/connected");
+                connectedRef.on("value", (snap) => {
+                    if (snap.val() === true) {
+                        isCloudConnected = true;
+                        updateCloudUIStatus(true, "Cloud Bersambung");
+                        setupCloudRealtimeListeners();
+                    } else {
+                        isCloudConnected = false;
+                        updateCloudUIStatus(false, "Mod Tempatan (Local)");
+                    }
+                });
+
+            } catch (e) {
+                console.warn("Firebase Init Error:", e);
+                updateCloudUIStatus(false, "Mod Tempatan (Local)");
+            }
+        }
+
+        function updateCloudUIStatus(connected, text) {
+            const dot = document.getElementById("cloudStatusDot");
+            const label = document.getElementById("cloudStatusText");
+            const modalBadge = document.getElementById("modalCloudStatusBadge");
+
+            if (dot) {
+                dot.className = `inline-block w-2 h-2 rounded-full ${connected ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`;
+            }
+            if (label) {
+                label.textContent = connected ? "Cloud Aktif" : "Cloud Sync";
+            }
+            if (modalBadge) {
+                modalBadge.innerHTML = connected 
+                    ? `<span class="bg-emerald-100 text-emerald-800 border border-emerald-300 px-2 py-0.5 rounded font-bold">🟢 Cloud Aktif &amp; Real-time Sync</span>`
+                    : `<span class="bg-amber-100 text-amber-800 border border-amber-300 px-2 py-0.5 rounded font-bold">🟡 ${text}</span>`;
+            }
+        }
+
+        function syncRecordToCloud(recordPayload) {
+            if (!firebaseDb || !isCloudConnected) return;
+            try {
+                const key = recordPayload.id;
+                firebaseDb.ref(`ot_claims_v2/${key}`).set(recordPayload);
+                firebaseDb.ref(`ot_index_v2/${key}`).set({
+                    id: recordPayload.id,
+                    guardId: recordPayload.guardId,
+                    guardName: recordPayload.guardName,
+                    year: recordPayload.year,
+                    month: recordPayload.month,
+                    monthLabel: recordPayload.monthLabel,
+                    startDate: recordPayload.startDate,
+                    grandTotalMoney: recordPayload.grandTotalMoney,
+                    totalHakikiHours: recordPayload.totalHakikiHours,
+                    totalGrossKlm: recordPayload.totalGrossKlm,
+                    totalNetKlm: recordPayload.totalNetKlm,
+                    savedAt: recordPayload.savedAt
+                });
+            } catch (e) {
+                console.warn("Cloud Sync Error:", e);
+            }
+        }
+
+        function setupCloudRealtimeListeners() {
+            if (!firebaseDb || cloudListenerActive) return;
+            cloudListenerActive = true;
+
+            firebaseDb.ref("ot_index_v2").on("value", (snapshot) => {
+                const cloudData = snapshot.val();
+                if (!cloudData) return;
+
+                let localIndex = getAllSavedRecordsIndex();
+                let hasNewUpdates = false;
+
+                Object.keys(cloudData).forEach(key => {
+                    const remoteItem = cloudData[key];
+                    const localItemIdx = localIndex.findIndex(x => x.id === key);
+
+                    if (localItemIdx < 0) {
+                        localIndex.unshift(remoteItem);
+                        hasNewUpdates = true;
+                        firebaseDb.ref(`ot_claims_v2/${key}`).once("value", (recSnap) => {
+                            if (recSnap.val()) {
+                                localStorage.setItem(key, JSON.stringify(recSnap.val()));
+                            }
+                        });
+                    } else if (remoteItem.savedAt > (localIndex[localItemIdx].savedAt || "")) {
+                        localIndex[localItemIdx] = remoteItem;
+                        hasNewUpdates = true;
+                        firebaseDb.ref(`ot_claims_v2/${key}`).once("value", (recSnap) => {
+                            if (recSnap.val()) {
+                                localStorage.setItem(key, JSON.stringify(recSnap.val()));
+                                if (key === getCurrentRecordKey()) {
+                                    showToast(`🔄 Rekod ${remoteItem.guardName} (${remoteItem.monthLabel}) dikemaskini dari PC lain!`);
+                                    loadRecordByKey(key, false);
+                                }
+                            }
+                        });
+                    }
+                });
+
+                if (hasNewUpdates) {
+                    localStorage.setItem(DB_INDEX_KEY, JSON.stringify(localIndex));
+                    updateSavedCountBadge();
+                    renderSavedRecordsTable();
+                }
+            });
+        }
+
+        function uploadAllLocalToCloud() {
+            if (!firebaseDb || !isCloudConnected) {
+                showToast("⚠️ Cloud belum bersambung. Data kekal selamat secara tempatan.", "error");
+                return;
+            }
+            const list = getAllSavedRecordsIndex();
+            let count = 0;
+            list.forEach(r => {
+                const raw = localStorage.getItem(r.id);
+                if (raw) {
+                    const payload = JSON.parse(raw);
+                    syncRecordToCloud(payload);
+                    count++;
+                }
+            });
+            showToast(`☁️ Berjaya muat naik ${count} rekod ke Cloud!`);
+        }
+
+        function syncAllRecordsWithCloud() {
+            if (!firebaseDb || !isCloudConnected) {
+                showToast("⚠️ Cloud sedang dalam mod luar talian / tempatan.", "error");
+                return;
+            }
+            firebaseDb.ref("ot_claims_v2").once("value", (snap) => {
+                const data = snap.val();
+                if (data) {
+                    let curIdx = getAllSavedRecordsIndex();
+                    let pulledCount = 0;
+                    Object.keys(data).forEach(k => {
+                        const rec = data[k];
+                        localStorage.setItem(k, JSON.stringify(rec));
+                        const meta = {
+                            id: k,
+                            guardId: rec.guardId,
+                            guardName: rec.guardName || (rec.customProfile ? rec.customProfile.name : "Pegawai"),
+                            year: rec.year,
+                            month: rec.month,
+                            monthLabel: rec.monthLabel,
+                            startDate: rec.startDate,
+                            grandTotalMoney: rec.grandTotalMoney,
+                            totalHakikiHours: rec.totalHakikiHours,
+                            totalGrossKlm: rec.totalGrossKlm,
+                            totalNetKlm: rec.totalNetKlm,
+                            savedAt: rec.savedAt || new Date().toISOString()
+                        };
+                        const existIdx = curIdx.findIndex(x => x.id === k);
+                        if (existIdx >= 0) curIdx[existIdx] = meta;
+                        else curIdx.unshift(meta);
+                        pulledCount++;
+                    });
+                    localStorage.setItem(DB_INDEX_KEY, JSON.stringify(curIdx));
+                    updateSavedCountBadge();
+                    renderSavedRecordsTable();
+                    showToast(`☁️ ${pulledCount} rekod disegerakkan dari Cloud!`);
+                } else {
+                    showToast("☁️ Cloud sedia digunakan (tiada data baru).");
+                }
+            });
+        }
+
+        function openCloudConfigModal() {
+            const config = getActiveFirebaseConfig();
+            document.getElementById("cfgDbUrl").value = config.databaseURL || "";
+            document.getElementById("cfgApiKey").value = config.apiKey || "";
+            document.getElementById("cfgProjectId").value = config.projectId || "";
+            document.getElementById("cloudConfigModal").classList.remove("hidden");
+        }
+
+        function closeCloudConfigModal() {
+            document.getElementById("cloudConfigModal").classList.add("hidden");
+        }
+
+        function toggleCloudConfigInputs() {
+            const isCustom = document.querySelector('input[name="cloudMode"][value="custom"]').checked;
+            const panel = document.getElementById("customFirebaseConfigPanel");
+            if (panel) {
+                if (isCustom) panel.classList.remove("hidden");
+                else panel.classList.add("hidden");
+            }
+        }
+
+        function saveCloudConfig() {
+            const isCustom = document.querySelector('input[name="cloudMode"][value="custom"]').checked;
+            if (isCustom) {
+                const dbUrl = document.getElementById("cfgDbUrl").value.trim();
+                const apiKey = document.getElementById("cfgApiKey").value.trim();
+                const projectId = document.getElementById("cfgProjectId").value.trim();
+
+                if (!dbUrl) {
+                    alert("Sila masukkan Firebase Database URL.");
+                    return;
+                }
+
+                const customConfig = {
+                    apiKey: apiKey || "custom-api-key",
+                    authDomain: `${projectId || 'custom'}.firebaseapp.com`,
+                    databaseURL: dbUrl,
+                    projectId: projectId || "custom-project",
+                    storageBucket: `${projectId || 'custom'}.appspot.com`
+                };
+
+                localStorage.setItem(CLOUD_CONFIG_STORAGE_KEY, JSON.stringify(customConfig));
+            } else {
+                localStorage.removeItem(CLOUD_CONFIG_STORAGE_KEY);
+            }
+
+            closeCloudConfigModal();
+            showToast("✅ Tetapan Cloud disimpan. Memulakan sambungan semula...");
+            setTimeout(() => {
+                initFirebaseCloud();
+            }, 500);
+        }
+
+        // =========================================================================
+        // PENYATA PENYELARASAN & PELARASAN AUDIT OT (JANUARI - JULAI 2026) ENGINE
+        // =========================================================================
+        const RECON_STORAGE_PREFIX = "BORANG_OT_RECON_DATA_V2_";
+
+        const DEFAULT_RECON_7_CYCLES = [
+            { cycle: 1, monthNum: 1, monthName: "JANUARI 2026", period: "29/12/2025 – 25/01/2026", defaultEligible: 1510.50, defaultPaid: 1800.00 },
+            { cycle: 2, monthNum: 2, monthName: "FEBRUARI 2026", period: "26/01/2026 – 22/02/2026", defaultEligible: 1420.00, defaultPaid: 1750.00 },
+            { cycle: 3, monthNum: 3, monthName: "MAC 2026", period: "23/02/2026 – 22/03/2026", defaultEligible: 1380.00, defaultPaid: 1690.00 },
+            { cycle: 4, monthNum: 4, monthName: "APRIL 2026", period: "23/03/2026 – 19/04/2026", defaultEligible: 1450.00, defaultPaid: 1780.00 },
+            { cycle: 5, monthNum: 5, monthName: "MEI 2026", period: "20/04/2026 – 17/05/2026", defaultEligible: 1390.00, defaultPaid: 1720.00 },
+            { cycle: 6, monthNum: 6, monthName: "JUN 2026", period: "18/05/2026 – 14/06/2026", defaultEligible: 1410.00, defaultPaid: 1740.00 },
+            { cycle: 7, monthNum: 7, monthName: "JULAI 2026", period: "15/06/2026 – 12/07/2026", defaultEligible: 803.07, defaultPaid: 1050.00 }
+        ];
+
+        let activeReconGuardId = "1";
+        let activeReconData = null;
+
+        function openReconciliationModal() {
+            const selectEl = document.getElementById("reconGuardSelect");
+            selectEl.innerHTML = "";
+            GUARDS_LIST.forEach(g => {
+                const opt = document.createElement("option");
+                opt.value = g.id.toString();
+                opt.textContent = `${g.id}. ${g.name} (Gaji: RM ${g.gaji.toFixed(2)})`;
+                selectEl.appendChild(opt);
+            });
+
+            const curGuardId = document.getElementById("guardSelect").value || "1";
+            selectEl.value = curGuardId;
+            activeReconGuardId = curGuardId;
+
+            loadReconciliationForGuard(activeReconGuardId);
+            document.getElementById("reconciliationModal").classList.remove("hidden");
+        }
+
+        function closeReconciliationModal() {
+            document.getElementById("reconciliationModal").classList.add("hidden");
+        }
+
+        function onReconGuardChange(guardId) {
+            activeReconGuardId = guardId;
+            loadReconciliationForGuard(guardId);
+        }
+
+        function loadReconciliationForGuard(guardId) {
+            const guard = GUARDS_LIST[parseInt(guardId)] || GUARDS_LIST[1];
+            
+            document.getElementById("reconBadgeGaji").textContent = `RM ${guard.gaji.toFixed(2)}`;
+            document.getElementById("reconBadgeKadar").textContent = `RM ${guard.kadar.toFixed(2)}`;
+            document.getElementById("reconBadgeSiling").textContent = `RM ${guard.siling.toFixed(2)}`;
+
+            const savedRaw = localStorage.getItem(RECON_STORAGE_PREFIX + guardId);
+            let reconObj = null;
+            if (savedRaw) {
+                try {
+                    reconObj = JSON.parse(savedRaw);
+                } catch (e) {}
+            }
+
+            if (!reconObj || !reconObj.cycles || reconObj.cycles.length !== 7) {
+                reconObj = {
+                    guardId: guardId,
+                    guardName: guard.name,
+                    syorOption: "next_month",
+                    catatan: "Pengiraan semula mendapati wujud lebihan bayaran disebabkan penyerapan defisit 45 jam seminggu bagi waktu bekerja syif.",
+                    cycles: JSON.parse(JSON.stringify(DEFAULT_RECON_7_CYCLES))
+                };
+
+                reconObj.cycles.forEach(c => {
+                    const savedClaimKey = getRecordKey(guardId, "2026", c.monthNum.toString());
+                    const savedClaimRaw = localStorage.getItem(savedClaimKey);
+                    if (savedClaimRaw) {
+                        try {
+                            const rec = JSON.parse(savedClaimRaw);
+                            const num = parseFloat((rec.grandTotalMoney || "").replace(/[^\d.]/g, ''));
+                            if (!isNaN(num) && num > 0) {
+                                c.defaultEligible = num;
+                            }
+                        } catch (e) {}
+                    }
+                });
+            }
+
+            activeReconData = reconObj;
+            renderReconciliationTables();
+        }
+
+        function renderReconciliationTables() {
+            if (!activeReconData) return;
+            const guard = GUARDS_LIST[parseInt(activeReconData.guardId)] || GUARDS_LIST[1];
+
+            let modalRowsHtml = "";
+            let printRowsHtml = "";
+
+            activeReconData.cycles.forEach((c, idx) => {
+                const paidVal = (c.paid !== undefined) ? c.paid : (c.defaultPaid || 0);
+                const eligibleVal = (c.eligible !== undefined) ? c.eligible : (c.defaultEligible || 0);
+                const diff = paidVal - eligibleVal;
+
+                modalRowsHtml += `
+                <tr class="hover:bg-slate-50 transition">
+                    <td class="py-2.5 px-3 font-bold text-center text-slate-500">${c.cycle}</td>
+                    <td class="py-2.5 px-3 font-bold text-slate-900">${c.monthName}</td>
+                    <td class="py-2.5 px-3 text-slate-600 font-mono text-[11px]">${c.period}</td>
+                    <td class="py-1.5 px-3 text-center bg-amber-50/50 border-x border-amber-200">
+                        <div class="flex items-center justify-center gap-1">
+                            <span class="text-slate-500 font-bold">RM</span>
+                            <input type="number" step="0.01" value="${paidVal.toFixed(2)}" 
+                                oninput="onReconInputChange(${idx}, 'paid', this.value)"
+                                class="w-28 bg-white border border-amber-300 rounded px-2 py-1 text-center font-bold text-amber-950 focus:ring-2 focus:ring-amber-500">
+                        </div>
+                    </td>
+                    <td class="py-1.5 px-3 text-center bg-blue-50/50 border-r border-blue-200">
+                        <div class="flex items-center justify-center gap-1">
+                            <span class="text-slate-500 font-bold">RM</span>
+                            <input type="number" step="0.01" value="${eligibleVal.toFixed(2)}" 
+                                oninput="onReconInputChange(${idx}, 'eligible', this.value)"
+                                class="w-28 bg-white border border-blue-300 rounded px-2 py-1 text-center font-bold text-blue-950 focus:ring-2 focus:ring-blue-500">
+                        </div>
+                    </td>
+                    <td class="py-2.5 px-3 text-center font-bold" id="reconRowDiff_${idx}">
+                        ${formatReconDiffBadge(diff)}
+                    </td>
+                </tr>`;
+
+                printRowsHtml += `
+                <tr>
+                    <td class="text-center font-bold">${c.cycle}</td>
+                    <td class="font-bold pl-2">${c.monthName}</td>
+                    <td class="text-center font-mono text-[7pt]">${c.period}</td>
+                    <td class="text-center font-bold">RM ${paidVal.toFixed(2)}</td>
+                    <td class="text-center font-bold text-blue-900">RM ${eligibleVal.toFixed(2)}</td>
+                    <td class="text-center font-black ${diff > 0 ? 'text-red-700' : 'text-emerald-700'}">
+                        ${diff > 0 ? `+ RM ${diff.toFixed(2)} (Terlebih)` : (diff < 0 ? `- RM ${Math.abs(diff).toFixed(2)} (Terkurang)` : 'RM 0.00 (Tepat)')}
+                    </td>
+                </tr>`;
+            });
+
+            document.getElementById("reconModalTableBody").innerHTML = modalRowsHtml;
+            document.getElementById("reconPrintTableBody").innerHTML = printRowsHtml;
+
+            const radios = document.getElementsByName("reconSyorOption");
+            radios.forEach(r => {
+                r.checked = (r.value === (activeReconData.syorOption || "next_month"));
+            });
+            document.getElementById("reconCatatanInput").value = activeReconData.catatan || "";
+
+            document.getElementById("reconPrintName").textContent = guard.name;
+            document.getElementById("reconPrintNokp").textContent = guard.nokp;
+            document.getElementById("reconPrintGaji").textContent = `RM ${guard.gaji.toFixed(2)}`;
+            document.getElementById("reconPrintKadar").textContent = `RM ${guard.kadar.toFixed(2)}`;
+            document.getElementById("reconPrintJawatan").textContent = guard.jawatan;
+            document.getElementById("reconPrintPusat").textContent = guard.pusat;
+            document.getElementById("reconSignPrepName").textContent = activeGuard.name;
+
+            calcReconSummaryLive();
+        }
+
+        function formatReconDiffBadge(diff) {
+            if (diff > 0) {
+                return `<span class="bg-red-100 text-red-800 border border-red-300 px-2 py-0.5 rounded font-black text-[11px]">+ RM ${diff.toFixed(2)} <span class="text-[9px] block text-red-600 font-semibold">(Terlebih Bayar)</span></span>`;
+            } else if (diff < 0) {
+                return `<span class="bg-emerald-100 text-emerald-800 border border-emerald-300 px-2 py-0.5 rounded font-black text-[11px]">- RM ${Math.abs(diff).toFixed(2)} <span class="text-[9px] block text-emerald-600 font-semibold">(Terkurang)</span></span>`;
+            } else {
+                return `<span class="bg-slate-100 text-slate-700 border border-slate-300 px-2 py-0.5 rounded font-bold text-[11px]">RM 0.00 (Tepat)</span>`;
+            }
+        }
+
+        function onReconInputChange(cycleIdx, field, val) {
+            if (!activeReconData || !activeReconData.cycles[cycleIdx]) return;
+            const parsed = parseFloat(val) || 0;
+            if (field === 'paid') activeReconData.cycles[cycleIdx].paid = parsed;
+            if (field === 'eligible') activeReconData.cycles[cycleIdx].eligible = parsed;
+
+            const paidVal = (activeReconData.cycles[cycleIdx].paid !== undefined) ? activeReconData.cycles[cycleIdx].paid : activeReconData.cycles[cycleIdx].defaultPaid;
+            const eligibleVal = (activeReconData.cycles[cycleIdx].eligible !== undefined) ? activeReconData.cycles[cycleIdx].eligible : activeReconData.cycles[cycleIdx].defaultEligible;
+            const diff = paidVal - eligibleVal;
+
+            const badgeEl = document.getElementById(`reconRowDiff_${cycleIdx}`);
+            if (badgeEl) badgeEl.innerHTML = formatReconDiffBadge(diff);
+
+            calcReconSummaryLive();
+        }
+
+        function calcReconSummaryLive() {
+            if (!activeReconData) return;
+            let totalPaid = 0;
+            let totalEligible = 0;
+
+            activeReconData.cycles.forEach(c => {
+                const p = (c.paid !== undefined) ? c.paid : (c.defaultPaid || 0);
+                const e = (c.eligible !== undefined) ? c.eligible : (c.defaultEligible || 0);
+                totalPaid += p;
+                totalEligible += e;
+            });
+
+            const netDiff = totalPaid - totalEligible;
+
+            document.getElementById("reconModalTotalPaid").textContent = `RM ${totalPaid.toFixed(2)}`;
+            document.getElementById("reconModalTotalEligible").textContent = `RM ${totalEligible.toFixed(2)}`;
+            document.getElementById("reconModalTotalDiff").innerHTML = netDiff > 0 
+                ? `<span class="text-red-700">+ RM ${netDiff.toFixed(2)}</span><span class="block text-[10px] text-red-600 font-semibold">(Perlu Diselaraskan)</span>`
+                : (netDiff < 0 ? `<span class="text-emerald-700">- RM ${Math.abs(netDiff).toFixed(2)}</span>` : `RM 0.00`);
+
+            document.getElementById("reconPrintTotalPaid").textContent = `RM ${totalPaid.toFixed(2)}`;
+            document.getElementById("reconPrintTotalEligible").textContent = `RM ${totalEligible.toFixed(2)}`;
+            document.getElementById("reconPrintTotalDiff").textContent = netDiff > 0 ? `+ RM ${netDiff.toFixed(2)} (Terlebih)` : `RM ${netDiff.toFixed(2)}`;
+            document.getElementById("reconPrintStatusBadge").textContent = netDiff > 0 
+                ? `JUMLAH TERLEBIH BAYAR: RM ${netDiff.toFixed(2)}`
+                : (netDiff < 0 ? `JUMLAH TERKURANG BAYAR: RM ${Math.abs(netDiff).toFixed(2)}` : `STATUS SEIMBANG: RM 0.00`);
+
+            updateReconSyorText();
+            saveReconDataToStorage(false);
+        }
+
+        function updateReconSyorText() {
+            const isInstallment = document.querySelector('input[name="reconSyorOption"][value="installment"]').checked;
+            if (activeReconData) {
+                activeReconData.syorOption = isInstallment ? "installment" : "next_month";
+            }
+            const syorTextEl = document.getElementById("reconPrintSyorText");
+            if (syorTextEl) {
+                syorTextEl.textContent = isInstallment
+                    ? "Potongan berjadual secara ansuran bulanan (cth: RM 150.00 – RM 200.00 sebulan) melalui penyata gaji dengan persetujuan bertulis pegawai."
+                    : "Tolak amaun lebihan bayaran ini daripada baucar tuntutan Elaun Lebih Masa bagi bulan berikutnya (Ogos / September 2026).";
+            }
+        }
+
+        function autoPopulateReconEligibleFromSavedRecords() {
+            if (!activeReconData) return;
+            let updatedCount = 0;
+            activeReconData.cycles.forEach(c => {
+                const savedKey = getRecordKey(activeReconData.guardId, "2026", c.monthNum.toString());
+                const raw = localStorage.getItem(savedKey);
+                if (raw) {
+                    try {
+                        const rec = JSON.parse(raw);
+                        const num = parseFloat((rec.grandTotalMoney || "").replace(/[^\d.]/g, ''));
+                        if (!isNaN(num) && num > 0) {
+                            c.eligible = num;
+                            updatedCount++;
+                        }
+                    } catch (e) {}
+                }
+            });
+            renderReconciliationTables();
+            showToast(`🔄 Berjaya memuatkan ${updatedCount} rekod dari pangkalan data!`);
+        }
+
+        function saveReconDataToStorage(notify = false) {
+            if (!activeReconData) return;
+            activeReconData.catatan = document.getElementById("reconCatatanInput").value;
+            const key = RECON_STORAGE_PREFIX + activeReconData.guardId;
+            localStorage.setItem(key, JSON.stringify(activeReconData));
+
+            if (firebaseDb && isCloudConnected) {
+                try {
+                    firebaseDb.ref(`ot_reconciliation_v2/${activeReconData.guardId}`).set(activeReconData);
+                } catch (e) {}
+            }
+
+            if (notify) {
+                showToast(`✅ Penyata Penyelarasan bagi ${activeReconData.guardName} berjaya disimpan!`);
+            }
+        }
+
+        function printReconciliationStatement() {
+            renderReconciliationTables();
+            document.body.classList.add("print-recon-mode");
+            window.print();
+            setTimeout(() => {
+                document.body.classList.remove("print-recon-mode");
+            }, 1000);
+        }
+
+        function exportReconCsv() {
+            if (!activeReconData) return;
+            const guard = GUARDS_LIST[parseInt(activeReconData.guardId)] || GUARDS_LIST[1];
+            let csv = "PENYATA PENYELARASAN AUDIT KELAYAKAN TUNTUTAN ELM (JANUARI - JULAI 2026)\n";
+            csv += `Nama Pegawai:,${guard.name}\n`;
+            csv += `No. Kad Pengenalan:,${guard.nokp}\n`;
+            csv += `Gaji Pokok:,RM ${guard.gaji.toFixed(2)}\n`;
+            csv += `Kadar Sejam:,RM ${guard.kadar.toFixed(2)}\n\n`;
+            csv += "Bil,Bulan / Kitaran,Tempoh Kitaran,(A) Telah Dibayar (Lama),(B) Sebenar Layak (JPA Syif),(A-B) Pelarasan\n";
+
+            let sumP = 0, sumE = 0;
+            activeReconData.cycles.forEach(c => {
+                const p = (c.paid !== undefined) ? c.paid : (c.defaultPaid || 0);
+                const e = (c.eligible !== undefined) ? c.eligible : (c.defaultEligible || 0);
+                const diff = p - e;
+                sumP += p;
+                sumE += e;
+                csv += `"${c.cycle}","${c.monthName}","${c.period}",${p.toFixed(2)},${e.toFixed(2)},${diff.toFixed(2)}\n`;
+            });
+
+            const totalDiff = sumP - sumE;
+            csv += `,"JUMLAH KESELURUHAN",,${sumP.toFixed(2)},${sumE.toFixed(2)},${totalDiff.toFixed(2)}\n`;
+
+            const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `PENYATA_PELARASAN_AUDIT_${guard.name.replace(/\s+/g, '_')}_JAN_JUL_2026.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast("📥 Fail CSV Penyata Penyelarasan dimuat turun!");
         }
     </script>
 </body>
