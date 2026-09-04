@@ -1559,19 +1559,24 @@
         // CALCULATION & RENDERING ENGINE (100% PERSIS DOKUMEN RASMI JPA)
         // =========================================================================
         function calculateAndRenderAll(shouldSave = true) {
+            const setTxt = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+            const setHtml = (id, val) => { const el = document.getElementById(id); if (el) el.innerHTML = val; };
+
             // Update Headers in document
-            document.getElementById("docName").textContent = activeGuard.name;
-            document.getElementById("docJawatan").textContent = activeGuard.jawatan;
-            document.getElementById("docKadar").textContent = activeGuard.kadar.toFixed(2);
-            document.getElementById("docNokp").textContent = activeGuard.nokp;
-            document.getElementById("docSiling").textContent = activeGuard.siling.toFixed(2);
-            document.getElementById("docPusat").textContent = activeGuard.pusat;
-            document.getElementById("docGaji").textContent = activeGuard.gaji.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            document.getElementById("docAkaun").textContent = activeGuard.akaun;
-            document.getElementById("docBank").textContent = activeGuard.bank;
-            document.getElementById("docNoGaji").textContent = activeGuard.nogaji;
-            document.getElementById("docTel").textContent = activeGuard.tel;
-            document.getElementById("signGuardName").textContent = activeGuard.name;
+            setTxt("docName", activeGuard.name);
+            setTxt("docJawatan", activeGuard.jawatan);
+            setTxt("docKadar", activeGuard.kadar.toFixed(2));
+            setTxt("docNokp", activeGuard.nokp);
+            setTxt("docSiling", activeGuard.siling.toFixed(2));
+            setTxt("docPusat", activeGuard.pusat);
+            setTxt("docGaji", activeGuard.gaji.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+            setTxt("docAkaun", activeGuard.akaun);
+            setTxt("docBank", activeGuard.bank);
+            setTxt("docNoGaji", activeGuard.nogaji);
+            setTxt("docTel", activeGuard.tel);
+            setTxt("signGuardName", activeGuard.name);
+            setTxt("docSignName1", activeGuard.name);
+            setTxt("docSignJawatan1", activeGuard.jawatan);
 
             // Render Table Week Schedule (Page 1)
             let tableHtml = "";
