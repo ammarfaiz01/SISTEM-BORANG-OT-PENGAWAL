@@ -5,12 +5,399 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistem Interaktif Borang Tuntutan Kerja Lebih Masa (Pekeliling JPA)</title>
     <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com">        // =========================================================================
+        // MASTER CYCLE SCHEDULE DATA & MODAL LOGIC (2026 - 2027)
+        // =========================================================================
+        const MASTER_CYCLES_LIST = [
+            // 2026 (Cycles 1 - 13)
+            { bil: 1, year: 2026, monthNum: 1, label: "DISEMBER 2025 / JANUARI 2026", startIso: "2025-12-29", range: "29/12/2025 – 25/01/2026", w1: "29/12–04/01", w2: "05/01–11/01", w3: "12/01–18/01", w4: "19/01–25/01", hka: "01/01 (Tahun Baru), 14/01 (Israk Mikraj)" },
+            { bil: 2, year: 2026, monthNum: 2, label: "JANUARI / FEBRUARI 2026", startIso: "2026-01-26", range: "26/01/2026 – 22/02/2026", w1: "26/01–01/02", w2: "02/02–08/02", w3: "09/02–15/02", w4: "16/02–22/02", hka: "01/02 (Wilayah/Thaipusam), 17-18/02 (TBC)" },
+            { bil: 3, year: 2026, monthNum: 3, label: "FEBRUARI / MAC 2026", startIso: "2026-02-23", range: "23/02/2026 – 22/03/2026", w1: "23/02–01/03", w2: "02/03–08/03", w3: "09/03–15/03", w4: "16/03–22/03", hka: "19/02 (Awal Ramadan), 21-22/03 (Aidilfitri)" },
+            { bil: 4, year: 2026, monthNum: 4, label: "MAC / APRIL 2026", startIso: "2026-03-23", range: "23/03/2026 – 19/04/2026", w1: "23/03–29/03", w2: "30/03–05/04", w3: "06/04–12/04", w4: "13/04–19/04", hka: "06/04 (Cuti Tambahan Raya)" },
+            { bil: 5, year: 2026, monthNum: 5, label: "APRIL / MEI 2026", startIso: "2026-04-20", range: "20/04/2026 – 17/05/2026", w1: "20/04–26/04", w2: "27/04–03/05", w3: "04/05–10/05", w4: "11/05–17/05", hka: "01/05 (Hari Pekerja), 31/05 (Wesak)" },
+            { bil: 6, year: 2026, monthNum: 6, label: "MEI / JUN 2026", startIso: "2026-05-18", range: "18/05/2026 – 14/06/2026", w1: "18/05–24/05", w2: "25/05–31/05", w3: "01/06–07/06", w4: "08/06–14/06", hka: "27/05 (Aidiladha), 01/06 (Agong)" },
+            { bil: 7, year: 2026, monthNum: 7, label: "JUN / JULAI 2026", startIso: "2026-06-15", range: "15/06/2026 – 12/07/2026", w1: "15/06–21/06", w2: "22/06–28/06", w3: "29/06–05/07", w4: "06/07–12/07", hka: "17/06 (Awal Muharram)" },
+            { bil: 8, year: 2026, monthNum: 8, label: "JULAI / OGOS 2026", startIso: "2026-07-13", range: "13/07/2026 – 09/08/2026", w1: "13/07–19/07", w2: "20/07–26/07", w3: "27/07–02/08", w4: "03/08–09/08", hka: "-" },
+            { bil: 9, year: 2026, monthNum: 9, label: "OGOS / SEPTEMBER 2026", startIso: "2026-08-10", range: "10/08/2026 – 06/09/2026", w1: "10/08–16/08", w2: "17/08–23/08", w3: "24/08–30/08", w4: "31/08–06/09", hka: "26/08 (Maulidur Rasul), 31/08 (Kebangsaan)" },
+            { bil: 10, year: 2026, monthNum: 10, label: "SEPTEMBER / OKTOBER 2026", startIso: "2026-09-07", range: "07/09/2026 – 04/10/2026", w1: "07/09–13/09", w2: "14/09–20/09", w3: "21/09–27/09", w4: "28/09–04/10", hka: "16/09 (Hari Malaysia)" },
+            { bil: 11, year: 2026, monthNum: 11, label: "OKTOBER / NOVEMBER 2026", startIso: "2026-10-05", range: "05/10/2026 – 01/11/2026", w1: "05/10–11/10", w2: "12/10–18/10", w3: "19/10–25/10", w4: "26/10–01/11", hka: "-" },
+            { bil: 12, year: 2026, monthNum: 11, label: "NOVEMBER 2026", startIso: "2026-11-02", range: "02/11/2026 – 29/11/2026", w1: "02/11–08/11", w2: "09/11–15/11", w3: "16/11–22/11", w4: "23/11–29/11", hka: "08/11 (Deepavali)" },
+            { bil: 13, year: 2026, monthNum: 12, label: "NOVEMBER / DISEMBER 2026", startIso: "2026-11-30", range: "30/11/2026 – 27/12/2026", w1: "30/11–06/12", w2: "07/12–13/12", w3: "14/12–20/12", w4: "21/12–27/12", hka: "25/12 (Krismas)" },
+            
+            // 2027 (Cycles 14 - 27)
+            { bil: 14, year: 2027, monthNum: 1, label: "DISEMBER 2026 / JANUARI 2027", startIso: "2026-12-28", range: "28/12/2026 – 24/01/2027", w1: "28/12–03/01", w2: "04/01–10/01", w3: "11/01–17/01", w4: "18/01–24/01", hka: "01/01 (Tahun Baru), 03/01 (Israk Mikraj)" },
+            { bil: 15, year: 2027, monthNum: 2, label: "JANUARI / FEBRUARI 2027", startIso: "2027-01-25", range: "25/01/2027 – 21/02/2027", w1: "25/01–31/01", w2: "01/02–07/02", w3: "08/02–14/02", w4: "15/02–21/02", hka: "01/02 (Wilayah), 06-07/02 (TBC), 09/02 (Ramadan)" },
+            { bil: 16, year: 2027, monthNum: 3, label: "FEBRUARI / MAC 2027", startIso: "2027-02-22", range: "22/02/2027 – 21/03/2027", w1: "22/02–28/02", w2: "01/03–07/03", w3: "08/03–14/03", w4: "15/03–21/03", hka: "10-11/03 (Hari Raya Aidilfitri)" },
+            { bil: 17, year: 2027, monthNum: 4, label: "MAC / APRIL 2027", startIso: "2027-03-22", range: "22/03/2027 – 18/04/2027", w1: "22/03–28/03", w2: "29/03–04/04", w3: "05/04–11/04", w4: "12/04–18/04", hka: "-" },
+            { bil: 18, year: 2027, monthNum: 5, label: "APRIL / MEI 2027", startIso: "2027-04-19", range: "19/04/2027 – 16/05/2027", w1: "19/04–25/04", w2: "26/04–02/05", w3: "03/05–09/05", w4: "10/05–16/05", hka: "01/05 (Hari Pekerja), 17/05 (Raya Haji), 20/05 (Wesak)" },
+            { bil: 19, year: 2027, monthNum: 6, label: "MEI / JUN 2027", startIso: "2027-05-17", range: "17/05/2027 – 13/06/2027", w1: "17/05–23/05", w2: "24/05–30/05", w3: "31/05–06/06", w4: "07/06–13/06", hka: "06/06 (Awal Muharram), 07/06 (Agong)" },
+            { bil: 20, year: 2027, monthNum: 7, label: "JUN / JULAI 2027", startIso: "2027-06-14", range: "14/06/2027 – 11/07/2027", w1: "14/06–20/06", w2: "21/06–27/06", w3: "28/06–04/07", w4: "05/07–11/07", hka: "-" },
+            { bil: 21, year: 2027, monthNum: 8, label: "JULAI / OGOS 2027", startIso: "2027-07-12", range: "12/07/2027 – 08/08/2027", w1: "12/07–18/07", w2: "19/07–25/07", w3: "26/07–01/08", w4: "02/08–08/08", hka: "-" },
+            { bil: 22, year: 2027, monthNum: 9, label: "OGOS / SEPTEMBER 2027", startIso: "2027-08-09", range: "09/08/2027 – 05/09/2027", w1: "09/08–15/08", w2: "16/08–22/08", w3: "23/08–29/08", w4: "30/08–05/09", hka: "15/08 (Maulidur Rasul), 31/08 (Kebangsaan)" },
+            { bil: 23, year: 2027, monthNum: 10, label: "SEPTEMBER / OKTOBER 2027", startIso: "2027-09-06", range: "06/09/2027 – 03/10/2027", w1: "06/09–12/09", w2: "13/09–19/09", w3: "20/09–26/09", w4: "27/09–03/10", hka: "16/09 (Hari Malaysia)" },
+            { bil: 24, year: 2027, monthNum: 10, label: "OKTOBER 2027", startIso: "2027-10-04", range: "04/10/2027 – 31/10/2027", w1: "04/10–10/10", w2: "11/10–17/10", w3: "18/10–24/10", w4: "25/10–31/10", hka: "28/10 (Deepavali)" },
+            { bil: 25, year: 2027, monthNum: 11, label: "NOVEMBER 2027", startIso: "2027-11-01", range: "01/11/2027 – 28/11/2027", w1: "01/11–07/11", w2: "08/11–14/11", w3: "15/11–21/11", w4: "22/11–28/11", hka: "-" },
+            { bil: 26, year: 2027, monthNum: 12, label: "NOVEMBER / DISEMBER 2027", startIso: "2027-11-29", range: "29/11/2027 – 26/12/2027", w1: "29/11–05/12", w2: "06/12–12/12", w3: "13/12–19/12", w4: "20/12–26/12", hka: "25/12 (Krismas)" },
+            { bil: 27, year: 2027, monthNum: 12, label: "DISEMBER 2027 / JANUARI 2028", startIso: "2027-12-27", range: "27/12/2027 – 23/01/2028", w1: "27/12–02/01", w2: "03/01–09/01", w3: "10/01–16/01", w4: "17/01–23/01", hka: "01/01 (Tahun Baru)" }
+        ];
+
+        function openCycleMasterModal() {
+            renderMasterCyclesTable('2026');
+            renderMasterCyclesTable('2027');
+            switchCycleYearTab('2026');
+            document.getElementById("cycleMasterModal").classList.remove("hidden");
+        }
+
+        function closeCycleMasterModal() {
+            document.getElementById("cycleMasterModal").classList.add("hidden");
+        }
+
+        function switchCycleYearTab(year) {
+            const btn26 = document.getElementById("tabBtn2026");
+            const btn27 = document.getElementById("tabBtn2027");
+            const c26 = document.getElementById("cycleTableContainer2026");
+            const c27 = document.getElementById("cycleTableContainer2027");
+
+            if (year === '2026') {
+                btn26.className = "bg-blue-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold transition shadow-sm flex items-center gap-1.5";
+                btn27.className = "bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5";
+                c26.classList.remove("hidden");
+                c27.classList.add("hidden");
+            } else {
+                btn27.className = "bg-blue-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold transition shadow-sm flex items-center gap-1.5";
+                btn26.className = "bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5";
+                c27.classList.remove("hidden");
+                c26.classList.add("hidden");
+            }
+        }
+
+        function renderMasterCyclesTable(year) {
+            const tbody = document.getElementById(`cycleListTbody${year}`);
+            if (!tbody) return;
+
+            const list = MASTER_CYCLES_LIST.filter(c => String(c.year) === String(year));
+            const currentStartVal = document.getElementById("startDatePicker")?.value;
+
+            let html = "";
+            list.forEach(c => {
+                const isActive = (c.startIso === currentStartVal);
+                const isDual = c.label.includes('/');
+                
+                html += `
+                <tr class="hover:bg-blue-50/60 transition ${isActive ? 'bg-blue-50 font-semibold' : ''}">
+                    <td class="py-2.5 px-3 text-center font-bold text-slate-700">${c.bil}</td>
+                    <td class="py-2.5 px-3">
+                        <span class="inline-block px-2 py-0.5 rounded text-[11px] font-bold ${isDual ? 'bg-amber-100 text-amber-900 border border-amber-200' : 'bg-blue-100 text-blue-900 border border-blue-200'}">${c.label}</span>
+                        ${isActive ? '<span class="ml-1.5 bg-blue-600 text-white text-[9.5px] px-1.5 py-0.2 rounded font-black">AKTIF</span>' : ''}
+                    </td>
+                    <td class="py-2.5 px-3 font-mono font-bold text-slate-800 text-[11px]">${c.range}</td>
+                    <td class="py-2.5 px-3 text-center font-mono text-[10.5px] text-slate-600">${c.w1}</td>
+                    <td class="py-2.5 px-3 text-center font-mono text-[10.5px] text-slate-600">${c.w2}</td>
+                    <td class="py-2.5 px-3 text-center font-mono text-[10.5px] text-slate-600">${c.w3}</td>
+                    <td class="py-2.5 px-3 text-center font-mono text-[10.5px] text-slate-600">${c.w4}</td>
+                    <td class="py-2.5 px-3 text-[10.5px] text-rose-700 font-medium">${c.hka}</td>
+                    <td class="py-2.5 px-3 text-center">
+                        <button onclick="applyCycleFromMaster('${c.startIso}', '${c.label}', ${c.year}, ${c.monthNum})" class="bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1 rounded text-xs font-bold transition shadow-sm flex items-center gap-1 mx-auto">
+                            <i class="fa-solid fa-check"></i> Pilih Kitaran
+                        </button>
+                    </td>
+                </tr>`;
+            });
+
+            tbody.innerHTML = html;
+        }
+
+        function applyCycleFromMaster(startIso, label, y, m) {
+            saveCurrentRecord(true);
+
+            document.getElementById("yearSelect").value = String(y);
+            document.getElementById("monthSelect").value = String(m);
+            document.getElementById("startDatePicker").value = startIso;
+
+            const [yyyy, mm, dd] = startIso.split('-').map(Number);
+            const startMon = new Date(yyyy, mm - 1, dd);
+            generateWeekDates(startMon);
+            document.getElementById("lblMonthHeader").textContent = label;
+
+            const gId = document.getElementById("guardSelect").value || "1";
+            const targetKey = getRecordKey(gId, y, m);
+
+            if (hasRecord(targetKey)) {
+                loadRecordByKey(targetKey, true);
+            } else {
+                initDefaultCleanSchedule();
+                calculateAndRenderAll(false);
+                saveCurrentRecord(true);
+            }
+
+            updateActiveRecordBadge();
+            closeCycleMasterModal();
+            showToast(`📅 Kitaran Dipilih: ${label} (${startIso})`);
+        }
+    </script>
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Firebase SDK (Compat) -->
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js">        // =========================================================================
+        // MASTER CYCLE SCHEDULE DATA & MODAL LOGIC (2026 - 2027)
+        // =========================================================================
+        const MASTER_CYCLES_LIST = [
+            // 2026 (Cycles 1 - 13)
+            { bil: 1, year: 2026, monthNum: 1, label: "DISEMBER 2025 / JANUARI 2026", startIso: "2025-12-29", range: "29/12/2025 – 25/01/2026", w1: "29/12–04/01", w2: "05/01–11/01", w3: "12/01–18/01", w4: "19/01–25/01", hka: "01/01 (Tahun Baru), 14/01 (Israk Mikraj)" },
+            { bil: 2, year: 2026, monthNum: 2, label: "JANUARI / FEBRUARI 2026", startIso: "2026-01-26", range: "26/01/2026 – 22/02/2026", w1: "26/01–01/02", w2: "02/02–08/02", w3: "09/02–15/02", w4: "16/02–22/02", hka: "01/02 (Wilayah/Thaipusam), 17-18/02 (TBC)" },
+            { bil: 3, year: 2026, monthNum: 3, label: "FEBRUARI / MAC 2026", startIso: "2026-02-23", range: "23/02/2026 – 22/03/2026", w1: "23/02–01/03", w2: "02/03–08/03", w3: "09/03–15/03", w4: "16/03–22/03", hka: "19/02 (Awal Ramadan), 21-22/03 (Aidilfitri)" },
+            { bil: 4, year: 2026, monthNum: 4, label: "MAC / APRIL 2026", startIso: "2026-03-23", range: "23/03/2026 – 19/04/2026", w1: "23/03–29/03", w2: "30/03–05/04", w3: "06/04–12/04", w4: "13/04–19/04", hka: "06/04 (Cuti Tambahan Raya)" },
+            { bil: 5, year: 2026, monthNum: 5, label: "APRIL / MEI 2026", startIso: "2026-04-20", range: "20/04/2026 – 17/05/2026", w1: "20/04–26/04", w2: "27/04–03/05", w3: "04/05–10/05", w4: "11/05–17/05", hka: "01/05 (Hari Pekerja), 31/05 (Wesak)" },
+            { bil: 6, year: 2026, monthNum: 6, label: "MEI / JUN 2026", startIso: "2026-05-18", range: "18/05/2026 – 14/06/2026", w1: "18/05–24/05", w2: "25/05–31/05", w3: "01/06–07/06", w4: "08/06–14/06", hka: "27/05 (Aidiladha), 01/06 (Agong)" },
+            { bil: 7, year: 2026, monthNum: 7, label: "JUN / JULAI 2026", startIso: "2026-06-15", range: "15/06/2026 – 12/07/2026", w1: "15/06–21/06", w2: "22/06–28/06", w3: "29/06–05/07", w4: "06/07–12/07", hka: "17/06 (Awal Muharram)" },
+            { bil: 8, year: 2026, monthNum: 8, label: "JULAI / OGOS 2026", startIso: "2026-07-13", range: "13/07/2026 – 09/08/2026", w1: "13/07–19/07", w2: "20/07–26/07", w3: "27/07–02/08", w4: "03/08–09/08", hka: "-" },
+            { bil: 9, year: 2026, monthNum: 9, label: "OGOS / SEPTEMBER 2026", startIso: "2026-08-10", range: "10/08/2026 – 06/09/2026", w1: "10/08–16/08", w2: "17/08–23/08", w3: "24/08–30/08", w4: "31/08–06/09", hka: "26/08 (Maulidur Rasul), 31/08 (Kebangsaan)" },
+            { bil: 10, year: 2026, monthNum: 10, label: "SEPTEMBER / OKTOBER 2026", startIso: "2026-09-07", range: "07/09/2026 – 04/10/2026", w1: "07/09–13/09", w2: "14/09–20/09", w3: "21/09–27/09", w4: "28/09–04/10", hka: "16/09 (Hari Malaysia)" },
+            { bil: 11, year: 2026, monthNum: 11, label: "OKTOBER / NOVEMBER 2026", startIso: "2026-10-05", range: "05/10/2026 – 01/11/2026", w1: "05/10–11/10", w2: "12/10–18/10", w3: "19/10–25/10", w4: "26/10–01/11", hka: "-" },
+            { bil: 12, year: 2026, monthNum: 11, label: "NOVEMBER 2026", startIso: "2026-11-02", range: "02/11/2026 – 29/11/2026", w1: "02/11–08/11", w2: "09/11–15/11", w3: "16/11–22/11", w4: "23/11–29/11", hka: "08/11 (Deepavali)" },
+            { bil: 13, year: 2026, monthNum: 12, label: "NOVEMBER / DISEMBER 2026", startIso: "2026-11-30", range: "30/11/2026 – 27/12/2026", w1: "30/11–06/12", w2: "07/12–13/12", w3: "14/12–20/12", w4: "21/12–27/12", hka: "25/12 (Krismas)" },
+            
+            // 2027 (Cycles 14 - 27)
+            { bil: 14, year: 2027, monthNum: 1, label: "DISEMBER 2026 / JANUARI 2027", startIso: "2026-12-28", range: "28/12/2026 – 24/01/2027", w1: "28/12–03/01", w2: "04/01–10/01", w3: "11/01–17/01", w4: "18/01–24/01", hka: "01/01 (Tahun Baru), 03/01 (Israk Mikraj)" },
+            { bil: 15, year: 2027, monthNum: 2, label: "JANUARI / FEBRUARI 2027", startIso: "2027-01-25", range: "25/01/2027 – 21/02/2027", w1: "25/01–31/01", w2: "01/02–07/02", w3: "08/02–14/02", w4: "15/02–21/02", hka: "01/02 (Wilayah), 06-07/02 (TBC), 09/02 (Ramadan)" },
+            { bil: 16, year: 2027, monthNum: 3, label: "FEBRUARI / MAC 2027", startIso: "2027-02-22", range: "22/02/2027 – 21/03/2027", w1: "22/02–28/02", w2: "01/03–07/03", w3: "08/03–14/03", w4: "15/03–21/03", hka: "10-11/03 (Hari Raya Aidilfitri)" },
+            { bil: 17, year: 2027, monthNum: 4, label: "MAC / APRIL 2027", startIso: "2027-03-22", range: "22/03/2027 – 18/04/2027", w1: "22/03–28/03", w2: "29/03–04/04", w3: "05/04–11/04", w4: "12/04–18/04", hka: "-" },
+            { bil: 18, year: 2027, monthNum: 5, label: "APRIL / MEI 2027", startIso: "2027-04-19", range: "19/04/2027 – 16/05/2027", w1: "19/04–25/04", w2: "26/04–02/05", w3: "03/05–09/05", w4: "10/05–16/05", hka: "01/05 (Hari Pekerja), 17/05 (Raya Haji), 20/05 (Wesak)" },
+            { bil: 19, year: 2027, monthNum: 6, label: "MEI / JUN 2027", startIso: "2027-05-17", range: "17/05/2027 – 13/06/2027", w1: "17/05–23/05", w2: "24/05–30/05", w3: "31/05–06/06", w4: "07/06–13/06", hka: "06/06 (Awal Muharram), 07/06 (Agong)" },
+            { bil: 20, year: 2027, monthNum: 7, label: "JUN / JULAI 2027", startIso: "2027-06-14", range: "14/06/2027 – 11/07/2027", w1: "14/06–20/06", w2: "21/06–27/06", w3: "28/06–04/07", w4: "05/07–11/07", hka: "-" },
+            { bil: 21, year: 2027, monthNum: 8, label: "JULAI / OGOS 2027", startIso: "2027-07-12", range: "12/07/2027 – 08/08/2027", w1: "12/07–18/07", w2: "19/07–25/07", w3: "26/07–01/08", w4: "02/08–08/08", hka: "-" },
+            { bil: 22, year: 2027, monthNum: 9, label: "OGOS / SEPTEMBER 2027", startIso: "2027-08-09", range: "09/08/2027 – 05/09/2027", w1: "09/08–15/08", w2: "16/08–22/08", w3: "23/08–29/08", w4: "30/08–05/09", hka: "15/08 (Maulidur Rasul), 31/08 (Kebangsaan)" },
+            { bil: 23, year: 2027, monthNum: 10, label: "SEPTEMBER / OKTOBER 2027", startIso: "2027-09-06", range: "06/09/2027 – 03/10/2027", w1: "06/09–12/09", w2: "13/09–19/09", w3: "20/09–26/09", w4: "27/09–03/10", hka: "16/09 (Hari Malaysia)" },
+            { bil: 24, year: 2027, monthNum: 10, label: "OKTOBER 2027", startIso: "2027-10-04", range: "04/10/2027 – 31/10/2027", w1: "04/10–10/10", w2: "11/10–17/10", w3: "18/10–24/10", w4: "25/10–31/10", hka: "28/10 (Deepavali)" },
+            { bil: 25, year: 2027, monthNum: 11, label: "NOVEMBER 2027", startIso: "2027-11-01", range: "01/11/2027 – 28/11/2027", w1: "01/11–07/11", w2: "08/11–14/11", w3: "15/11–21/11", w4: "22/11–28/11", hka: "-" },
+            { bil: 26, year: 2027, monthNum: 12, label: "NOVEMBER / DISEMBER 2027", startIso: "2027-11-29", range: "29/11/2027 – 26/12/2027", w1: "29/11–05/12", w2: "06/12–12/12", w3: "13/12–19/12", w4: "20/12–26/12", hka: "25/12 (Krismas)" },
+            { bil: 27, year: 2027, monthNum: 12, label: "DISEMBER 2027 / JANUARI 2028", startIso: "2027-12-27", range: "27/12/2027 – 23/01/2028", w1: "27/12–02/01", w2: "03/01–09/01", w3: "10/01–16/01", w4: "17/01–23/01", hka: "01/01 (Tahun Baru)" }
+        ];
+
+        function openCycleMasterModal() {
+            renderMasterCyclesTable('2026');
+            renderMasterCyclesTable('2027');
+            switchCycleYearTab('2026');
+            document.getElementById("cycleMasterModal").classList.remove("hidden");
+        }
+
+        function closeCycleMasterModal() {
+            document.getElementById("cycleMasterModal").classList.add("hidden");
+        }
+
+        function switchCycleYearTab(year) {
+            const btn26 = document.getElementById("tabBtn2026");
+            const btn27 = document.getElementById("tabBtn2027");
+            const c26 = document.getElementById("cycleTableContainer2026");
+            const c27 = document.getElementById("cycleTableContainer2027");
+
+            if (year === '2026') {
+                btn26.className = "bg-blue-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold transition shadow-sm flex items-center gap-1.5";
+                btn27.className = "bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5";
+                c26.classList.remove("hidden");
+                c27.classList.add("hidden");
+            } else {
+                btn27.className = "bg-blue-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold transition shadow-sm flex items-center gap-1.5";
+                btn26.className = "bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5";
+                c27.classList.remove("hidden");
+                c26.classList.add("hidden");
+            }
+        }
+
+        function renderMasterCyclesTable(year) {
+            const tbody = document.getElementById(`cycleListTbody${year}`);
+            if (!tbody) return;
+
+            const list = MASTER_CYCLES_LIST.filter(c => String(c.year) === String(year));
+            const currentStartVal = document.getElementById("startDatePicker")?.value;
+
+            let html = "";
+            list.forEach(c => {
+                const isActive = (c.startIso === currentStartVal);
+                const isDual = c.label.includes('/');
+                
+                html += `
+                <tr class="hover:bg-blue-50/60 transition ${isActive ? 'bg-blue-50 font-semibold' : ''}">
+                    <td class="py-2.5 px-3 text-center font-bold text-slate-700">${c.bil}</td>
+                    <td class="py-2.5 px-3">
+                        <span class="inline-block px-2 py-0.5 rounded text-[11px] font-bold ${isDual ? 'bg-amber-100 text-amber-900 border border-amber-200' : 'bg-blue-100 text-blue-900 border border-blue-200'}">${c.label}</span>
+                        ${isActive ? '<span class="ml-1.5 bg-blue-600 text-white text-[9.5px] px-1.5 py-0.2 rounded font-black">AKTIF</span>' : ''}
+                    </td>
+                    <td class="py-2.5 px-3 font-mono font-bold text-slate-800 text-[11px]">${c.range}</td>
+                    <td class="py-2.5 px-3 text-center font-mono text-[10.5px] text-slate-600">${c.w1}</td>
+                    <td class="py-2.5 px-3 text-center font-mono text-[10.5px] text-slate-600">${c.w2}</td>
+                    <td class="py-2.5 px-3 text-center font-mono text-[10.5px] text-slate-600">${c.w3}</td>
+                    <td class="py-2.5 px-3 text-center font-mono text-[10.5px] text-slate-600">${c.w4}</td>
+                    <td class="py-2.5 px-3 text-[10.5px] text-rose-700 font-medium">${c.hka}</td>
+                    <td class="py-2.5 px-3 text-center">
+                        <button onclick="applyCycleFromMaster('${c.startIso}', '${c.label}', ${c.year}, ${c.monthNum})" class="bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1 rounded text-xs font-bold transition shadow-sm flex items-center gap-1 mx-auto">
+                            <i class="fa-solid fa-check"></i> Pilih Kitaran
+                        </button>
+                    </td>
+                </tr>`;
+            });
+
+            tbody.innerHTML = html;
+        }
+
+        function applyCycleFromMaster(startIso, label, y, m) {
+            saveCurrentRecord(true);
+
+            document.getElementById("yearSelect").value = String(y);
+            document.getElementById("monthSelect").value = String(m);
+            document.getElementById("startDatePicker").value = startIso;
+
+            const [yyyy, mm, dd] = startIso.split('-').map(Number);
+            const startMon = new Date(yyyy, mm - 1, dd);
+            generateWeekDates(startMon);
+            document.getElementById("lblMonthHeader").textContent = label;
+
+            const gId = document.getElementById("guardSelect").value || "1";
+            const targetKey = getRecordKey(gId, y, m);
+
+            if (hasRecord(targetKey)) {
+                loadRecordByKey(targetKey, true);
+            } else {
+                initDefaultCleanSchedule();
+                calculateAndRenderAll(false);
+                saveCurrentRecord(true);
+            }
+
+            updateActiveRecordBadge();
+            closeCycleMasterModal();
+            showToast(`📅 Kitaran Dipilih: ${label} (${startIso})`);
+        }
+    </script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js">        // =========================================================================
+        // MASTER CYCLE SCHEDULE DATA & MODAL LOGIC (2026 - 2027)
+        // =========================================================================
+        const MASTER_CYCLES_LIST = [
+            // 2026 (Cycles 1 - 13)
+            { bil: 1, year: 2026, monthNum: 1, label: "DISEMBER 2025 / JANUARI 2026", startIso: "2025-12-29", range: "29/12/2025 – 25/01/2026", w1: "29/12–04/01", w2: "05/01–11/01", w3: "12/01–18/01", w4: "19/01–25/01", hka: "01/01 (Tahun Baru), 14/01 (Israk Mikraj)" },
+            { bil: 2, year: 2026, monthNum: 2, label: "JANUARI / FEBRUARI 2026", startIso: "2026-01-26", range: "26/01/2026 – 22/02/2026", w1: "26/01–01/02", w2: "02/02–08/02", w3: "09/02–15/02", w4: "16/02–22/02", hka: "01/02 (Wilayah/Thaipusam), 17-18/02 (TBC)" },
+            { bil: 3, year: 2026, monthNum: 3, label: "FEBRUARI / MAC 2026", startIso: "2026-02-23", range: "23/02/2026 – 22/03/2026", w1: "23/02–01/03", w2: "02/03–08/03", w3: "09/03–15/03", w4: "16/03–22/03", hka: "19/02 (Awal Ramadan), 21-22/03 (Aidilfitri)" },
+            { bil: 4, year: 2026, monthNum: 4, label: "MAC / APRIL 2026", startIso: "2026-03-23", range: "23/03/2026 – 19/04/2026", w1: "23/03–29/03", w2: "30/03–05/04", w3: "06/04–12/04", w4: "13/04–19/04", hka: "06/04 (Cuti Tambahan Raya)" },
+            { bil: 5, year: 2026, monthNum: 5, label: "APRIL / MEI 2026", startIso: "2026-04-20", range: "20/04/2026 – 17/05/2026", w1: "20/04–26/04", w2: "27/04–03/05", w3: "04/05–10/05", w4: "11/05–17/05", hka: "01/05 (Hari Pekerja), 31/05 (Wesak)" },
+            { bil: 6, year: 2026, monthNum: 6, label: "MEI / JUN 2026", startIso: "2026-05-18", range: "18/05/2026 – 14/06/2026", w1: "18/05–24/05", w2: "25/05–31/05", w3: "01/06–07/06", w4: "08/06–14/06", hka: "27/05 (Aidiladha), 01/06 (Agong)" },
+            { bil: 7, year: 2026, monthNum: 7, label: "JUN / JULAI 2026", startIso: "2026-06-15", range: "15/06/2026 – 12/07/2026", w1: "15/06–21/06", w2: "22/06–28/06", w3: "29/06–05/07", w4: "06/07–12/07", hka: "17/06 (Awal Muharram)" },
+            { bil: 8, year: 2026, monthNum: 8, label: "JULAI / OGOS 2026", startIso: "2026-07-13", range: "13/07/2026 – 09/08/2026", w1: "13/07–19/07", w2: "20/07–26/07", w3: "27/07–02/08", w4: "03/08–09/08", hka: "-" },
+            { bil: 9, year: 2026, monthNum: 9, label: "OGOS / SEPTEMBER 2026", startIso: "2026-08-10", range: "10/08/2026 – 06/09/2026", w1: "10/08–16/08", w2: "17/08–23/08", w3: "24/08–30/08", w4: "31/08–06/09", hka: "26/08 (Maulidur Rasul), 31/08 (Kebangsaan)" },
+            { bil: 10, year: 2026, monthNum: 10, label: "SEPTEMBER / OKTOBER 2026", startIso: "2026-09-07", range: "07/09/2026 – 04/10/2026", w1: "07/09–13/09", w2: "14/09–20/09", w3: "21/09–27/09", w4: "28/09–04/10", hka: "16/09 (Hari Malaysia)" },
+            { bil: 11, year: 2026, monthNum: 11, label: "OKTOBER / NOVEMBER 2026", startIso: "2026-10-05", range: "05/10/2026 – 01/11/2026", w1: "05/10–11/10", w2: "12/10–18/10", w3: "19/10–25/10", w4: "26/10–01/11", hka: "-" },
+            { bil: 12, year: 2026, monthNum: 11, label: "NOVEMBER 2026", startIso: "2026-11-02", range: "02/11/2026 – 29/11/2026", w1: "02/11–08/11", w2: "09/11–15/11", w3: "16/11–22/11", w4: "23/11–29/11", hka: "08/11 (Deepavali)" },
+            { bil: 13, year: 2026, monthNum: 12, label: "NOVEMBER / DISEMBER 2026", startIso: "2026-11-30", range: "30/11/2026 – 27/12/2026", w1: "30/11–06/12", w2: "07/12–13/12", w3: "14/12–20/12", w4: "21/12–27/12", hka: "25/12 (Krismas)" },
+            
+            // 2027 (Cycles 14 - 27)
+            { bil: 14, year: 2027, monthNum: 1, label: "DISEMBER 2026 / JANUARI 2027", startIso: "2026-12-28", range: "28/12/2026 – 24/01/2027", w1: "28/12–03/01", w2: "04/01–10/01", w3: "11/01–17/01", w4: "18/01–24/01", hka: "01/01 (Tahun Baru), 03/01 (Israk Mikraj)" },
+            { bil: 15, year: 2027, monthNum: 2, label: "JANUARI / FEBRUARI 2027", startIso: "2027-01-25", range: "25/01/2027 – 21/02/2027", w1: "25/01–31/01", w2: "01/02–07/02", w3: "08/02–14/02", w4: "15/02–21/02", hka: "01/02 (Wilayah), 06-07/02 (TBC), 09/02 (Ramadan)" },
+            { bil: 16, year: 2027, monthNum: 3, label: "FEBRUARI / MAC 2027", startIso: "2027-02-22", range: "22/02/2027 – 21/03/2027", w1: "22/02–28/02", w2: "01/03–07/03", w3: "08/03–14/03", w4: "15/03–21/03", hka: "10-11/03 (Hari Raya Aidilfitri)" },
+            { bil: 17, year: 2027, monthNum: 4, label: "MAC / APRIL 2027", startIso: "2027-03-22", range: "22/03/2027 – 18/04/2027", w1: "22/03–28/03", w2: "29/03–04/04", w3: "05/04–11/04", w4: "12/04–18/04", hka: "-" },
+            { bil: 18, year: 2027, monthNum: 5, label: "APRIL / MEI 2027", startIso: "2027-04-19", range: "19/04/2027 – 16/05/2027", w1: "19/04–25/04", w2: "26/04–02/05", w3: "03/05–09/05", w4: "10/05–16/05", hka: "01/05 (Hari Pekerja), 17/05 (Raya Haji), 20/05 (Wesak)" },
+            { bil: 19, year: 2027, monthNum: 6, label: "MEI / JUN 2027", startIso: "2027-05-17", range: "17/05/2027 – 13/06/2027", w1: "17/05–23/05", w2: "24/05–30/05", w3: "31/05–06/06", w4: "07/06–13/06", hka: "06/06 (Awal Muharram), 07/06 (Agong)" },
+            { bil: 20, year: 2027, monthNum: 7, label: "JUN / JULAI 2027", startIso: "2027-06-14", range: "14/06/2027 – 11/07/2027", w1: "14/06–20/06", w2: "21/06–27/06", w3: "28/06–04/07", w4: "05/07–11/07", hka: "-" },
+            { bil: 21, year: 2027, monthNum: 8, label: "JULAI / OGOS 2027", startIso: "2027-07-12", range: "12/07/2027 – 08/08/2027", w1: "12/07–18/07", w2: "19/07–25/07", w3: "26/07–01/08", w4: "02/08–08/08", hka: "-" },
+            { bil: 22, year: 2027, monthNum: 9, label: "OGOS / SEPTEMBER 2027", startIso: "2027-08-09", range: "09/08/2027 – 05/09/2027", w1: "09/08–15/08", w2: "16/08–22/08", w3: "23/08–29/08", w4: "30/08–05/09", hka: "15/08 (Maulidur Rasul), 31/08 (Kebangsaan)" },
+            { bil: 23, year: 2027, monthNum: 10, label: "SEPTEMBER / OKTOBER 2027", startIso: "2027-09-06", range: "06/09/2027 – 03/10/2027", w1: "06/09–12/09", w2: "13/09–19/09", w3: "20/09–26/09", w4: "27/09–03/10", hka: "16/09 (Hari Malaysia)" },
+            { bil: 24, year: 2027, monthNum: 10, label: "OKTOBER 2027", startIso: "2027-10-04", range: "04/10/2027 – 31/10/2027", w1: "04/10–10/10", w2: "11/10–17/10", w3: "18/10–24/10", w4: "25/10–31/10", hka: "28/10 (Deepavali)" },
+            { bil: 25, year: 2027, monthNum: 11, label: "NOVEMBER 2027", startIso: "2027-11-01", range: "01/11/2027 – 28/11/2027", w1: "01/11–07/11", w2: "08/11–14/11", w3: "15/11–21/11", w4: "22/11–28/11", hka: "-" },
+            { bil: 26, year: 2027, monthNum: 12, label: "NOVEMBER / DISEMBER 2027", startIso: "2027-11-29", range: "29/11/2027 – 26/12/2027", w1: "29/11–05/12", w2: "06/12–12/12", w3: "13/12–19/12", w4: "20/12–26/12", hka: "25/12 (Krismas)" },
+            { bil: 27, year: 2027, monthNum: 12, label: "DISEMBER 2027 / JANUARI 2028", startIso: "2027-12-27", range: "27/12/2027 – 23/01/2028", w1: "27/12–02/01", w2: "03/01–09/01", w3: "10/01–16/01", w4: "17/01–23/01", hka: "01/01 (Tahun Baru)" }
+        ];
+
+        function openCycleMasterModal() {
+            renderMasterCyclesTable('2026');
+            renderMasterCyclesTable('2027');
+            switchCycleYearTab('2026');
+            document.getElementById("cycleMasterModal").classList.remove("hidden");
+        }
+
+        function closeCycleMasterModal() {
+            document.getElementById("cycleMasterModal").classList.add("hidden");
+        }
+
+        function switchCycleYearTab(year) {
+            const btn26 = document.getElementById("tabBtn2026");
+            const btn27 = document.getElementById("tabBtn2027");
+            const c26 = document.getElementById("cycleTableContainer2026");
+            const c27 = document.getElementById("cycleTableContainer2027");
+
+            if (year === '2026') {
+                btn26.className = "bg-blue-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold transition shadow-sm flex items-center gap-1.5";
+                btn27.className = "bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5";
+                c26.classList.remove("hidden");
+                c27.classList.add("hidden");
+            } else {
+                btn27.className = "bg-blue-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold transition shadow-sm flex items-center gap-1.5";
+                btn26.className = "bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5";
+                c27.classList.remove("hidden");
+                c26.classList.add("hidden");
+            }
+        }
+
+        function renderMasterCyclesTable(year) {
+            const tbody = document.getElementById(`cycleListTbody${year}`);
+            if (!tbody) return;
+
+            const list = MASTER_CYCLES_LIST.filter(c => String(c.year) === String(year));
+            const currentStartVal = document.getElementById("startDatePicker")?.value;
+
+            let html = "";
+            list.forEach(c => {
+                const isActive = (c.startIso === currentStartVal);
+                const isDual = c.label.includes('/');
+                
+                html += `
+                <tr class="hover:bg-blue-50/60 transition ${isActive ? 'bg-blue-50 font-semibold' : ''}">
+                    <td class="py-2.5 px-3 text-center font-bold text-slate-700">${c.bil}</td>
+                    <td class="py-2.5 px-3">
+                        <span class="inline-block px-2 py-0.5 rounded text-[11px] font-bold ${isDual ? 'bg-amber-100 text-amber-900 border border-amber-200' : 'bg-blue-100 text-blue-900 border border-blue-200'}">${c.label}</span>
+                        ${isActive ? '<span class="ml-1.5 bg-blue-600 text-white text-[9.5px] px-1.5 py-0.2 rounded font-black">AKTIF</span>' : ''}
+                    </td>
+                    <td class="py-2.5 px-3 font-mono font-bold text-slate-800 text-[11px]">${c.range}</td>
+                    <td class="py-2.5 px-3 text-center font-mono text-[10.5px] text-slate-600">${c.w1}</td>
+                    <td class="py-2.5 px-3 text-center font-mono text-[10.5px] text-slate-600">${c.w2}</td>
+                    <td class="py-2.5 px-3 text-center font-mono text-[10.5px] text-slate-600">${c.w3}</td>
+                    <td class="py-2.5 px-3 text-center font-mono text-[10.5px] text-slate-600">${c.w4}</td>
+                    <td class="py-2.5 px-3 text-[10.5px] text-rose-700 font-medium">${c.hka}</td>
+                    <td class="py-2.5 px-3 text-center">
+                        <button onclick="applyCycleFromMaster('${c.startIso}', '${c.label}', ${c.year}, ${c.monthNum})" class="bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1 rounded text-xs font-bold transition shadow-sm flex items-center gap-1 mx-auto">
+                            <i class="fa-solid fa-check"></i> Pilih Kitaran
+                        </button>
+                    </td>
+                </tr>`;
+            });
+
+            tbody.innerHTML = html;
+        }
+
+        function applyCycleFromMaster(startIso, label, y, m) {
+            saveCurrentRecord(true);
+
+            document.getElementById("yearSelect").value = String(y);
+            document.getElementById("monthSelect").value = String(m);
+            document.getElementById("startDatePicker").value = startIso;
+
+            const [yyyy, mm, dd] = startIso.split('-').map(Number);
+            const startMon = new Date(yyyy, mm - 1, dd);
+            generateWeekDates(startMon);
+            document.getElementById("lblMonthHeader").textContent = label;
+
+            const gId = document.getElementById("guardSelect").value || "1";
+            const targetKey = getRecordKey(gId, y, m);
+
+            if (hasRecord(targetKey)) {
+                loadRecordByKey(targetKey, true);
+            } else {
+                initDefaultCleanSchedule();
+                calculateAndRenderAll(false);
+                saveCurrentRecord(true);
+            }
+
+            updateActiveRecordBadge();
+            closeCycleMasterModal();
+            showToast(`📅 Kitaran Dipilih: ${label} (${startIso})`);
+        }
+    </script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap');
 
@@ -170,6 +557,9 @@
                 </button>
                 <button onclick="resetToDefaultSample()" class="bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-black px-3 py-1.5 rounded-lg shadow-md transition flex items-center gap-1.5 border border-amber-300 ring-2 ring-amber-300/40" title="Muat semula contoh data asal ADNAN BIN AWANG (Julai/Ogos 2026)">
                     <i class="fa-solid fa-file-pdf text-red-700"></i> Contoh Asal
+                </button>
+                <button onclick="openCycleMasterModal()" class="bg-indigo-700 hover:bg-indigo-800 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-md transition flex items-center gap-1.5 border border-indigo-500" title="Jadual Induk Kitaran 4 Minggu (2026 - 2027)">
+                    <i class="fa-solid fa-calendar-days text-amber-300"></i> Jadual Kitaran 2026–2027
                 </button>
                 <button onclick="openReconciliationModal()" class="bg-purple-700 hover:bg-purple-800 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-md transition flex items-center gap-1.5 border border-purple-500" title="Penyata Penyelarasan & Pelarasan Audit OT (Januari - Julai 2026)">
                     <i class="fa-solid fa-scale-balanced text-amber-300"></i> Penyata Pelarasan Audit (Jan-Jul)
@@ -1453,23 +1843,33 @@
             updateActiveRecordBadge();
         }
 
-        function onGuardSelectChange() {
-            // Save current record first
-            saveCurrentRecord(true);
+        function initDefaultCleanSchedule() {
+            weekScheduleData = Array.from({ length: 4 }, () => [
+                { hakiki: "8 Jam\n8.00 Am – 4.00 Pm", hHours: 8, klm: "", kGross: 0, kSiang: 0, kMalam: 0 },
+                { hakiki: "8 Jam\n8.00 Am – 4.00 Pm", hHours: 8, klm: "", kGross: 0, kSiang: 0, kMalam: 0 },
+                { hakiki: "8 Jam\n8.00 Am – 4.00 Pm", hHours: 8, klm: "", kGross: 0, kSiang: 0, kMalam: 0 },
+                { hakiki: "8 Jam\n8.00 Am – 4.00 Pm", hHours: 8, klm: "", kGross: 0, kSiang: 0, kMalam: 0 },
+                { hakiki: "8 Jam\n8.00 Am – 4.00 Pm", hHours: 8, klm: "", kGross: 0, kSiang: 0, kMalam: 0 },
+                { hakiki: "HRM", hHours: 0, klm: "", kGross: 0, kSiang: 0, kMalam: 0 },
+                { hakiki: "HKM", hHours: 0, klm: "", kGross: 0, kSiang: 0, kMalam: 0 }
+            ]);
+        }
 
+        function onGuardSelectChange() {
             const idx = parseInt(document.getElementById("guardSelect").value);
             activeGuard = JSON.parse(JSON.stringify(GUARDS_LIST[idx] || GUARDS_LIST[0]));
             updateProfileInputs();
 
             const y = parseInt(document.getElementById("yearSelect").value);
             const m = parseInt(document.getElementById("monthSelect").value);
-            const gId = document.getElementById("guardSelect").value;
+            const gId = String(idx);
             const targetKey = getRecordKey(gId, y, m);
 
             if (hasRecord(targetKey)) {
                 loadRecordByKey(targetKey, true);
             } else {
-                calculateAndRenderAll();
+                initDefaultCleanSchedule();
+                calculateAndRenderAll(false);
                 saveCurrentRecord(true);
             }
             updateActiveRecordBadge();
@@ -1491,13 +1891,16 @@
             activeGuard.siling = parseFloat((g / 3).toFixed(2));
             document.getElementById("profKadar").value = activeGuard.kadar.toFixed(2);
             document.getElementById("profSiling").value = activeGuard.siling.toFixed(2);
-            calculateAndRenderAll();
+            calculateAndRenderAll(true);
         }
 
         function updateProfileLive() {
             activeGuard.name = document.getElementById("profName").value;
             activeGuard.nokp = document.getElementById("profNokp").value;
-            calculateAndRenderAll();
+            const noGajiParts = (document.getElementById("profNoGaji").value || "").split('/');
+            if (noGajiParts.length > 0) activeGuard.nogaji = noGajiParts[0].trim();
+            if (noGajiParts.length > 1) activeGuard.pusat = noGajiParts[1].trim();
+            calculateAndRenderAll(true);
         }
 
         function resetAllShifts() {
@@ -2710,17 +3113,24 @@
 
             // Highlight KLM buttons
             const klmText = (tempModalKlm.text || "").trim();
-            const isKlmNone = (!klmText || tempModalKlm.grossHours === 0);
-            const isKlm8Pagi = (/8\.00\s*Am\s*[–-]\s*4\.00\s*Pm/i.test(klmText) && tempModalKlm.grossHours === 8);
-            const isKlm8Petang = (/4\.00\s*Pm\s*[–-]\s*12\.00\s*Am/i.test(klmText) && tempModalKlm.grossHours === 8);
-            const isKlm8Malam = (/12\.00\s*Am\s*[–-]\s*8\.00\s*Am/i.test(klmText) && tempModalKlm.grossHours === 8);
+            const cleanKlm = klmText.replace(/–|—|-/g, '-').replace(/\s+/g, ' ');
+
+            const isKlmNone = (!cleanKlm || tempModalKlm.grossHours === 0);
+            const isKlm8Pagi = (/8\.00\s*Am\s*-\s*4\.00\s*Pm/i.test(cleanKlm) && !cleanKlm.includes("12.00") && tempModalKlm.grossHours === 8);
+            const isKlm8Petang = (/4\.00\s*Pm\s*-\s*12\.00\s*Am/i.test(cleanKlm) && !cleanKlm.includes("8.00") && tempModalKlm.grossHours === 8);
+            const isKlm8Malam = (/12\.00\s*Am\s*-\s*8\.00\s*Am/i.test(cleanKlm) && !cleanKlm.includes("4.00") && tempModalKlm.grossHours === 8);
             
-            const isKlm16M_PT = (klmText.includes("12.00 Am") && klmText.includes("4.00") && tempModalKlm.grossHours === 16);
-            const isKlm16M_P = (klmText.includes("12.00 Am") && klmText.includes("8.00 Am") && !klmText.includes("4.00") && tempModalKlm.grossHours === 16);
-            const isKlm16P_PT = (klmText.includes("8.00 Am") && klmText.includes("4.00 Pm") && !klmText.includes("12.00 Am") && tempModalKlm.grossHours === 16);
-            const isKlm16PT_M = (klmText.startsWith("16 Jam\n4.00 Pm") && tempModalKlm.grossHours === 16);
-            const isKlm10 = (tempModalKlm.grossHours === 10);
-            const isKlm6 = (tempModalKlm.grossHours === 6);
+            // 16 Hours Double Shifts
+            const has12to8 = /12\.00\s*Am\s*-\s*8\.00\s*Am/i.test(cleanKlm);
+            const has8to4  = /8\.00\s*Am\s*-\s*4\.00\s*Pm/i.test(cleanKlm);
+            const has4to12 = /4\.00\s*Pm\s*-\s*12\.00\s*Am/i.test(cleanKlm);
+
+            const isKlm16M_PT = (tempModalKlm.grossHours === 16 && has12to8 && has4to12 && cleanKlm.indexOf("12.00 Am - 8.00 Am") < cleanKlm.indexOf("4.00 Pm - 12.00 Am"));
+            const isKlm16PT_M = (tempModalKlm.grossHours === 16 && has12to8 && has4to12 && cleanKlm.indexOf("4.00 Pm - 12.00 Am") < cleanKlm.indexOf("12.00 Am - 8.00 Am"));
+            const isKlm16M_P  = (tempModalKlm.grossHours === 16 && has12to8 && has8to4);
+            const isKlm16P_PT = (tempModalKlm.grossHours === 16 && has8to4 && has4to12 && !has12to8);
+            const isKlm10     = (tempModalKlm.grossHours === 10);
+            const isKlm6      = (tempModalKlm.grossHours === 6);
 
             const klmBtns = [
                 { id: "btnKlm_NONE", label: "Tiada OT", active: isKlmNone },
@@ -3410,6 +3820,135 @@
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
             showToast("📥 Fail CSV Penyata Penyelarasan dimuat turun!");
+        }
+            // =========================================================================
+        // MASTER CYCLE SCHEDULE DATA & MODAL LOGIC (2026 - 2027)
+        // =========================================================================
+        const MASTER_CYCLES_LIST = [
+            // 2026 (Cycles 1 - 13)
+            { bil: 1, year: 2026, monthNum: 1, label: "DISEMBER 2025 / JANUARI 2026", startIso: "2025-12-29", range: "29/12/2025 – 25/01/2026", w1: "29/12–04/01", w2: "05/01–11/01", w3: "12/01–18/01", w4: "19/01–25/01", hka: "01/01 (Tahun Baru), 14/01 (Israk Mikraj)" },
+            { bil: 2, year: 2026, monthNum: 2, label: "JANUARI / FEBRUARI 2026", startIso: "2026-01-26", range: "26/01/2026 – 22/02/2026", w1: "26/01–01/02", w2: "02/02–08/02", w3: "09/02–15/02", w4: "16/02–22/02", hka: "01/02 (Wilayah/Thaipusam), 17-18/02 (TBC)" },
+            { bil: 3, year: 2026, monthNum: 3, label: "FEBRUARI / MAC 2026", startIso: "2026-02-23", range: "23/02/2026 – 22/03/2026", w1: "23/02–01/03", w2: "02/03–08/03", w3: "09/03–15/03", w4: "16/03–22/03", hka: "19/02 (Awal Ramadan), 21-22/03 (Aidilfitri)" },
+            { bil: 4, year: 2026, monthNum: 4, label: "MAC / APRIL 2026", startIso: "2026-03-23", range: "23/03/2026 – 19/04/2026", w1: "23/03–29/03", w2: "30/03–05/04", w3: "06/04–12/04", w4: "13/04–19/04", hka: "06/04 (Cuti Tambahan Raya)" },
+            { bil: 5, year: 2026, monthNum: 5, label: "APRIL / MEI 2026", startIso: "2026-04-20", range: "20/04/2026 – 17/05/2026", w1: "20/04–26/04", w2: "27/04–03/05", w3: "04/05–10/05", w4: "11/05–17/05", hka: "01/05 (Hari Pekerja), 31/05 (Wesak)" },
+            { bil: 6, year: 2026, monthNum: 6, label: "MEI / JUN 2026", startIso: "2026-05-18", range: "18/05/2026 – 14/06/2026", w1: "18/05–24/05", w2: "25/05–31/05", w3: "01/06–07/06", w4: "08/06–14/06", hka: "27/05 (Aidiladha), 01/06 (Agong)" },
+            { bil: 7, year: 2026, monthNum: 7, label: "JUN / JULAI 2026", startIso: "2026-06-15", range: "15/06/2026 – 12/07/2026", w1: "15/06–21/06", w2: "22/06–28/06", w3: "29/06–05/07", w4: "06/07–12/07", hka: "17/06 (Awal Muharram)" },
+            { bil: 8, year: 2026, monthNum: 8, label: "JULAI / OGOS 2026", startIso: "2026-07-13", range: "13/07/2026 – 09/08/2026", w1: "13/07–19/07", w2: "20/07–26/07", w3: "27/07–02/08", w4: "03/08–09/08", hka: "-" },
+            { bil: 9, year: 2026, monthNum: 9, label: "OGOS / SEPTEMBER 2026", startIso: "2026-08-10", range: "10/08/2026 – 06/09/2026", w1: "10/08–16/08", w2: "17/08–23/08", w3: "24/08–30/08", w4: "31/08–06/09", hka: "26/08 (Maulidur Rasul), 31/08 (Kebangsaan)" },
+            { bil: 10, year: 2026, monthNum: 10, label: "SEPTEMBER / OKTOBER 2026", startIso: "2026-09-07", range: "07/09/2026 – 04/10/2026", w1: "07/09–13/09", w2: "14/09–20/09", w3: "21/09–27/09", w4: "28/09–04/10", hka: "16/09 (Hari Malaysia)" },
+            { bil: 11, year: 2026, monthNum: 11, label: "OKTOBER / NOVEMBER 2026", startIso: "2026-10-05", range: "05/10/2026 – 01/11/2026", w1: "05/10–11/10", w2: "12/10–18/10", w3: "19/10–25/10", w4: "26/10–01/11", hka: "-" },
+            { bil: 12, year: 2026, monthNum: 11, label: "NOVEMBER 2026", startIso: "2026-11-02", range: "02/11/2026 – 29/11/2026", w1: "02/11–08/11", w2: "09/11–15/11", w3: "16/11–22/11", w4: "23/11–29/11", hka: "08/11 (Deepavali)" },
+            { bil: 13, year: 2026, monthNum: 12, label: "NOVEMBER / DISEMBER 2026", startIso: "2026-11-30", range: "30/11/2026 – 27/12/2026", w1: "30/11–06/12", w2: "07/12–13/12", w3: "14/12–20/12", w4: "21/12–27/12", hka: "25/12 (Krismas)" },
+            
+            // 2027 (Cycles 14 - 27)
+            { bil: 14, year: 2027, monthNum: 1, label: "DISEMBER 2026 / JANUARI 2027", startIso: "2026-12-28", range: "28/12/2026 – 24/01/2027", w1: "28/12–03/01", w2: "04/01–10/01", w3: "11/01–17/01", w4: "18/01–24/01", hka: "01/01 (Tahun Baru), 03/01 (Israk Mikraj)" },
+            { bil: 15, year: 2027, monthNum: 2, label: "JANUARI / FEBRUARI 2027", startIso: "2027-01-25", range: "25/01/2027 – 21/02/2027", w1: "25/01–31/01", w2: "01/02–07/02", w3: "08/02–14/02", w4: "15/02–21/02", hka: "01/02 (Wilayah), 06-07/02 (TBC), 09/02 (Ramadan)" },
+            { bil: 16, year: 2027, monthNum: 3, label: "FEBRUARI / MAC 2027", startIso: "2027-02-22", range: "22/02/2027 – 21/03/2027", w1: "22/02–28/02", w2: "01/03–07/03", w3: "08/03–14/03", w4: "15/03–21/03", hka: "10-11/03 (Hari Raya Aidilfitri)" },
+            { bil: 17, year: 2027, monthNum: 4, label: "MAC / APRIL 2027", startIso: "2027-03-22", range: "22/03/2027 – 18/04/2027", w1: "22/03–28/03", w2: "29/03–04/04", w3: "05/04–11/04", w4: "12/04–18/04", hka: "-" },
+            { bil: 18, year: 2027, monthNum: 5, label: "APRIL / MEI 2027", startIso: "2027-04-19", range: "19/04/2027 – 16/05/2027", w1: "19/04–25/04", w2: "26/04–02/05", w3: "03/05–09/05", w4: "10/05–16/05", hka: "01/05 (Hari Pekerja), 17/05 (Raya Haji), 20/05 (Wesak)" },
+            { bil: 19, year: 2027, monthNum: 6, label: "MEI / JUN 2027", startIso: "2027-05-17", range: "17/05/2027 – 13/06/2027", w1: "17/05–23/05", w2: "24/05–30/05", w3: "31/05–06/06", w4: "07/06–13/06", hka: "06/06 (Awal Muharram), 07/06 (Agong)" },
+            { bil: 20, year: 2027, monthNum: 7, label: "JUN / JULAI 2027", startIso: "2027-06-14", range: "14/06/2027 – 11/07/2027", w1: "14/06–20/06", w2: "21/06–27/06", w3: "28/06–04/07", w4: "05/07–11/07", hka: "-" },
+            { bil: 21, year: 2027, monthNum: 8, label: "JULAI / OGOS 2027", startIso: "2027-07-12", range: "12/07/2027 – 08/08/2027", w1: "12/07–18/07", w2: "19/07–25/07", w3: "26/07–01/08", w4: "02/08–08/08", hka: "-" },
+            { bil: 22, year: 2027, monthNum: 9, label: "OGOS / SEPTEMBER 2027", startIso: "2027-08-09", range: "09/08/2027 – 05/09/2027", w1: "09/08–15/08", w2: "16/08–22/08", w3: "23/08–29/08", w4: "30/08–05/09", hka: "15/08 (Maulidur Rasul), 31/08 (Kebangsaan)" },
+            { bil: 23, year: 2027, monthNum: 10, label: "SEPTEMBER / OKTOBER 2027", startIso: "2027-09-06", range: "06/09/2027 – 03/10/2027", w1: "06/09–12/09", w2: "13/09–19/09", w3: "20/09–26/09", w4: "27/09–03/10", hka: "16/09 (Hari Malaysia)" },
+            { bil: 24, year: 2027, monthNum: 10, label: "OKTOBER 2027", startIso: "2027-10-04", range: "04/10/2027 – 31/10/2027", w1: "04/10–10/10", w2: "11/10–17/10", w3: "18/10–24/10", w4: "25/10–31/10", hka: "28/10 (Deepavali)" },
+            { bil: 25, year: 2027, monthNum: 11, label: "NOVEMBER 2027", startIso: "2027-11-01", range: "01/11/2027 – 28/11/2027", w1: "01/11–07/11", w2: "08/11–14/11", w3: "15/11–21/11", w4: "22/11–28/11", hka: "-" },
+            { bil: 26, year: 2027, monthNum: 12, label: "NOVEMBER / DISEMBER 2027", startIso: "2027-11-29", range: "29/11/2027 – 26/12/2027", w1: "29/11–05/12", w2: "06/12–12/12", w3: "13/12–19/12", w4: "20/12–26/12", hka: "25/12 (Krismas)" },
+            { bil: 27, year: 2027, monthNum: 12, label: "DISEMBER 2027 / JANUARI 2028", startIso: "2027-12-27", range: "27/12/2027 – 23/01/2028", w1: "27/12–02/01", w2: "03/01–09/01", w3: "10/01–16/01", w4: "17/01–23/01", hka: "01/01 (Tahun Baru)" }
+        ];
+
+        function openCycleMasterModal() {
+            renderMasterCyclesTable('2026');
+            renderMasterCyclesTable('2027');
+            switchCycleYearTab('2026');
+            document.getElementById("cycleMasterModal").classList.remove("hidden");
+        }
+
+        function closeCycleMasterModal() {
+            document.getElementById("cycleMasterModal").classList.add("hidden");
+        }
+
+        function switchCycleYearTab(year) {
+            const btn26 = document.getElementById("tabBtn2026");
+            const btn27 = document.getElementById("tabBtn2027");
+            const c26 = document.getElementById("cycleTableContainer2026");
+            const c27 = document.getElementById("cycleTableContainer2027");
+
+            if (year === '2026') {
+                btn26.className = "bg-blue-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold transition shadow-sm flex items-center gap-1.5";
+                btn27.className = "bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5";
+                c26.classList.remove("hidden");
+                c27.classList.add("hidden");
+            } else {
+                btn27.className = "bg-blue-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold transition shadow-sm flex items-center gap-1.5";
+                btn26.className = "bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5";
+                c27.classList.remove("hidden");
+                c26.classList.add("hidden");
+            }
+        }
+
+        function renderMasterCyclesTable(year) {
+            const tbody = document.getElementById(`cycleListTbody${year}`);
+            if (!tbody) return;
+
+            const list = MASTER_CYCLES_LIST.filter(c => String(c.year) === String(year));
+            const currentStartVal = document.getElementById("startDatePicker")?.value;
+
+            let html = "";
+            list.forEach(c => {
+                const isActive = (c.startIso === currentStartVal);
+                const isDual = c.label.includes('/');
+                
+                html += `
+                <tr class="hover:bg-blue-50/60 transition ${isActive ? 'bg-blue-50 font-semibold' : ''}">
+                    <td class="py-2.5 px-3 text-center font-bold text-slate-700">${c.bil}</td>
+                    <td class="py-2.5 px-3">
+                        <span class="inline-block px-2 py-0.5 rounded text-[11px] font-bold ${isDual ? 'bg-amber-100 text-amber-900 border border-amber-200' : 'bg-blue-100 text-blue-900 border border-blue-200'}">${c.label}</span>
+                        ${isActive ? '<span class="ml-1.5 bg-blue-600 text-white text-[9.5px] px-1.5 py-0.2 rounded font-black">AKTIF</span>' : ''}
+                    </td>
+                    <td class="py-2.5 px-3 font-mono font-bold text-slate-800 text-[11px]">${c.range}</td>
+                    <td class="py-2.5 px-3 text-center font-mono text-[10.5px] text-slate-600">${c.w1}</td>
+                    <td class="py-2.5 px-3 text-center font-mono text-[10.5px] text-slate-600">${c.w2}</td>
+                    <td class="py-2.5 px-3 text-center font-mono text-[10.5px] text-slate-600">${c.w3}</td>
+                    <td class="py-2.5 px-3 text-center font-mono text-[10.5px] text-slate-600">${c.w4}</td>
+                    <td class="py-2.5 px-3 text-[10.5px] text-rose-700 font-medium">${c.hka}</td>
+                    <td class="py-2.5 px-3 text-center">
+                        <button onclick="applyCycleFromMaster('${c.startIso}', '${c.label}', ${c.year}, ${c.monthNum})" class="bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1 rounded text-xs font-bold transition shadow-sm flex items-center gap-1 mx-auto">
+                            <i class="fa-solid fa-check"></i> Pilih Kitaran
+                        </button>
+                    </td>
+                </tr>`;
+            });
+
+            tbody.innerHTML = html;
+        }
+
+        function applyCycleFromMaster(startIso, label, y, m) {
+            saveCurrentRecord(true);
+
+            document.getElementById("yearSelect").value = String(y);
+            document.getElementById("monthSelect").value = String(m);
+            document.getElementById("startDatePicker").value = startIso;
+
+            const [yyyy, mm, dd] = startIso.split('-').map(Number);
+            const startMon = new Date(yyyy, mm - 1, dd);
+            generateWeekDates(startMon);
+            document.getElementById("lblMonthHeader").textContent = label;
+
+            const gId = document.getElementById("guardSelect").value || "1";
+            const targetKey = getRecordKey(gId, y, m);
+
+            if (hasRecord(targetKey)) {
+                loadRecordByKey(targetKey, true);
+            } else {
+                initDefaultCleanSchedule();
+                calculateAndRenderAll(false);
+                saveCurrentRecord(true);
+            }
+
+            updateActiveRecordBadge();
+            closeCycleMasterModal();
+            showToast(`📅 Kitaran Dipilih: ${label} (${startIso})`);
         }
     </script>
 </body>
