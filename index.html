@@ -58,44 +58,37 @@
         }
 
         .hrm-box {
-            background-color: #fde2d2 !important; /* Soft Peach / Salmon (JPA 2024 Circular) */
+            background-color: #fde2d2 !important; /* Soft Peach / Salmon (HRM) */
             color: #7c2d12 !important;
             font-weight: bold;
         }
 
         .hkm-box {
-            background-color: #bfdbfe !important; /* Soft Sky Blue (JPA 2024 Circular) */
+            background-color: #bfdbfe !important; /* Soft Sky Blue (HKM) */
             color: #1e3a8a !important;
             font-weight: bold;
         }
 
-        .hka-box {
-            background-color: #fca5a5 !important; /* Soft Red / Krismas (JPA 2024 Circular) */
+        .hka-box, .hka-shift-box {
+            background-color: #fca5a5 !important; /* Merah Terang Jelas (HKA) */
             color: #7f1d1d !important;
             font-weight: bold;
         }
 
-        .hka-shift-box {
-            background-color: #ffe4e6 !important; /* Soft Rose tint for Hakiki Shift on HKA */
-            border: 1.5px solid #f43f5e !important;
-            color: #881337 !important;
-            font-weight: bold;
-        }
-
         .cr-box {
-            background-color: #dcfce7 !important; /* Soft Mint / Emerald (Cuti Rehat 8j) */
+            background-color: #dcfce7 !important; /* Soft Mint / Emerald (CR) */
             color: #14532d !important;
             font-weight: bold;
         }
 
         .cs-box {
-            background-color: #fef9c3 !important; /* Soft Yellow (Cuti Sakit 8j) */
+            background-color: #fef9c3 !important; /* Soft Yellow (CS) */
             color: #713f12 !important;
             font-weight: bold;
         }
 
         .klm-box {
-            background-color: #fdba74 !important; /* Warm Orange / Amber (JPA 2024 Circular) */
+            background-color: #fdba74 !important; /* Warm Orange / Amber (KLM) */
             color: #7c2d12 !important;
             font-weight: bold;
             line-height: 1.15;
@@ -171,7 +164,7 @@
                 </div>
                 <div>
                     <h1 class="text-base font-extrabold tracking-tight flex items-center gap-2">
-                        SISTEM PENJANA &amp; PENGIRA OT INTERAKTIF <span class="bg-blue-500 text-white text-[11px] font-black px-2 py-0.5 rounded-full ml-1 shadow-sm">V2.0</span>
+                        SISTEM PENJANA &amp; PENGIRA OT INTERAKTIF <span class="bg-blue-500 text-white text-[11px] font-black px-2 py-0.5 rounded-full ml-1 shadow-sm">V3.0</span>
                         <span class="bg-amber-400 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded shadow-sm">PEKELILING JPA 2024</span>
                     </h1>
                     <p class="text-xs text-blue-200">Isi Syif Dengan Hanya 'Tick' / Pilih, Pengiraan Jam &amp; Duit OT Dijana 100% Automatik</p>
@@ -199,8 +192,11 @@
                 <button onclick="openReconciliationModal()" class="bg-purple-700 hover:bg-purple-800 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-md transition flex items-center gap-1.5 border border-purple-500" title="Penyata Penyelarasan & Pelarasan Audit OT (Januari - Julai 2026)">
                     <i class="fa-solid fa-scale-balanced text-amber-300"></i> Penyata Pelarasan Audit (Jan-Jul)
                 </button>
-                <button onclick="window.print()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3.5 py-1.5 rounded-lg shadow-md transition flex items-center gap-1.5 border border-emerald-500">
-                    <i class="fa-solid fa-print"></i> Cetak Borang (A4)
+                <button onclick="saveAsPdf()" class="bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold px-3.5 py-1.5 rounded-lg shadow-md transition flex items-center gap-1.5 border border-rose-500 shadow-rose-900/20" title="Simpan sebagai dokumen PDF">
+                    <i class="fa-solid fa-file-pdf text-white"></i> Simpan PDF
+                </button>
+                <button onclick="window.print()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3.5 py-1.5 rounded-lg shadow-md transition flex items-center gap-1.5 border border-emerald-500" title="Cetak ke pencetak (A4)">
+                    <i class="fa-solid fa-print"></i> Cetak (A4)
                 </button>
             </div>
         </div>
@@ -1614,6 +1610,12 @@
             }
         }
 
+        // Truncate / Potong Sen Terus (buang baki sen tanpa membundarkan ke atas)
+        function truncateMoney(val) {
+            if (isNaN(val) || val === null || val === undefined) return 0;
+            return Math.floor(Number((val + 1e-9).toFixed(6)) * 100) / 100;
+        }
+
         function formatCellContent(raw) {
             if (!raw) return "-";
             let text = String(raw).trim();
@@ -1730,15 +1732,11 @@
                     let offCls = "";
                     if (cellData.hakiki === "HRM") offCls = "hrm-box";
                     else if (cellData.hakiki === "HKM") offCls = "hkm-box";
-                    else if (cellData.hakiki === "HKA") offCls = "hka-box";
-                    else if (isHKA && cellData.hHours > 0) offCls = "hka-shift-box";
+                    else if (cellData.hakiki === "HKA" || isHKA) offCls = "hka-box";
                     else if (isCR) offCls = "cr-box";
                     else if (isCS) offCls = "cs-box";
 
                     let hakikiFormatted = formatCellContent(cellData.hakiki);
-                    if (isHKA && cellData.hHours > 0 && cellData.hakiki !== "HKA") {
-                        hakikiFormatted = `<div class="inline-block bg-rose-600 text-white font-black text-[6pt] px-1 py-0.5 rounded mb-0.5 leading-none shadow-xs">⭐ HKA</div><br>${hakikiFormatted}`;
-                    }
                     hakikiCells += `<td class="interactive-cell ${offCls}" onclick="openEditModal(${w}, ${d})" title="Klik untuk ubah">${hakikiFormatted}</td>`;
 
                     // Hakiki Hours (Shifts, CR, CS contribute to weekWorkHours)
@@ -1774,7 +1772,8 @@
                         catSlots[cat].dates.push(dateStr);
 
                         const klmFormatted = formatCellContent(cellData.klm);
-                        klmCells += `<td class="interactive-cell klm-box" onclick="openEditModal(${w}, ${d})" title="Klik untuk ubah">${klmFormatted}</td>`;
+                        const klmCls = (cat === "HK" || isHKA) ? "hka-box" : "klm-box";
+                        klmCells += `<td class="interactive-cell ${klmCls}" onclick="openEditModal(${w}, ${d})" title="Klik untuk ubah">${klmFormatted}</td>`;
                     } else {
                         klmCells += `<td class="interactive-cell" onclick="openEditModal(${w}, ${d})" title="Klik untuk tambah OT">-</td>`;
                     }
@@ -1800,9 +1799,23 @@
                 const totalNet   = netHbb.net + netHr.net + netHk.net;
                 weekNetKlmList.push({ gross: totalGross, rest: totalRest, net: totalNet, mark: weekMarks[w], hbb: netHbb, hr: netHr, hk: netHk });
 
+                let hasNightShiftInWeek = false;
+                for (let d = 0; d < 7; d++) {
+                    const cd = weekScheduleData[w][d] || {};
+                    const hakT = (cd.hakiki || "").toUpperCase();
+                    const klmT = (cd.klm || "").toUpperCase();
+                    const isNHak = hakT.includes("12.00 AM") || hakT.includes("12.00AM") || hakT.includes("11 MLM") || hakT.includes("10.00 PM") || hakT.includes("10.00PM") || hakT.includes("4.00 PM") || hakT.includes("MALAM");
+                    const isNKlm = (cd.kMalam > 0) || klmT.includes("12.00 AM") || klmT.includes("12.00AM") || klmT.includes("11 MLM") || klmT.includes("10.00 PM") || klmT.includes("10.00PM") || klmT.includes("4.00 PM") || klmT.includes("MALAM");
+                    if (isNHak || isNKlm) {
+                        hasNightShiftInWeek = true;
+                    }
+                }
+
                 // DEFICIT VS SURPLUS CALCULATION (JPA 2024 PPSM WAKTU BEKERJA SR.4.3.1 & SR.4.4.1)
                 let surplusHours = 0;
                 let surplusMoney = 0;
+                let surplusRate = 1.125;
+                let surplusRateName = "Siang";
                 let takLayakSiang = 0;
                 let takLayakMalam = 0;
 
@@ -1814,9 +1827,12 @@
                 let layakHkMalam  = netHk.malam;
 
                 if (weekWorkHours > 45) {
-                    // Situasi 2 (M/S 143): Lebihan jam hakiki (>45j) dikira sebagai OT (HBB Siang 1.125)
+                    // Situasi 2 (M/S 143): Lebihan jam hakiki (>45j) dikira sebagai OT
+                    // Nota Rasmi JPA: Mengambil kira terdapat gabungan 2 jenis kerja, maka kadar pekali malam (1.25) digunakan kerana ia kadar tertinggi untuk HBB
                     surplusHours = weekWorkHours - 45;
-                    surplusMoney = parseFloat((surplusHours * 1.125 * activeGuard.kadar).toFixed(2));
+                    surplusRate = hasNightShiftInWeek ? 1.25 : 1.125;
+                    surplusRateName = hasNightShiftInWeek ? "Malam" : "Siang";
+                    surplusMoney = truncateMoney(surplusHours * surplusRate * activeGuard.kadar);
                 } else {
                     // Defisit jam hakiki (<45j): Diserap dari HBB Siang terlebih dahulu
                     const deficitFrom45 = Math.max(0, 45 - weekWorkHours);
@@ -1827,16 +1843,17 @@
                     layakHbbMalam = Math.max(0, layakHbbMalam - takLayakMalam);
                 }
 
-                // Rates per Pekeliling JPA 2024:
+                // Rates per Pekeliling JPA 2024 (Potong Sen Terus / Tanpa Bundar):
                 // HBB: Siang 1.125 | Malam 1.250
                 // HR:  Siang 1.250 | Malam 1.500
                 // HK:  Siang 1.750 | Malam 2.000
-                const hbbSiangMoney = parseFloat((layakHbbSiang * 1.125 * activeGuard.kadar).toFixed(2));
-                const hbbMalamMoney = parseFloat((layakHbbMalam * 1.250 * activeGuard.kadar).toFixed(2));
-                const hrSiangMoney  = parseFloat((layakHrSiang  * 1.250 * activeGuard.kadar).toFixed(2));
-                const hrMalamMoney  = parseFloat((layakHrMalam  * 1.500 * activeGuard.kadar).toFixed(2));
-                const hkSiangMoney  = parseFloat((layakHkSiang  * 1.750 * activeGuard.kadar).toFixed(2));
-                const hkMalamMoney  = parseFloat((layakHkMalam  * 2.000 * activeGuard.kadar).toFixed(2));
+                const hbbSiangMoney = truncateMoney(layakHbbSiang * 1.125 * activeGuard.kadar);
+                const hbbMalamMoney = truncateMoney(layakHbbMalam * 1.250 * activeGuard.kadar);
+                const hrSiangMoney  = truncateMoney(layakHrSiang  * 1.250 * activeGuard.kadar);
+                const hrMalamMoney  = truncateMoney(layakHrMalam  * 1.500 * activeGuard.kadar);
+                const hkSiangMoney  = truncateMoney(layakHkSiang  * 1.750 * activeGuard.kadar);
+                const hkMalamMoney  = truncateMoney(layakHkMalam  * 2.000 * activeGuard.kadar);
+                const takLayakMoney = truncateMoney((takLayakSiang * 1.125 + takLayakMalam * 1.25) * activeGuard.kadar);
 
                 const weekTotalElmMoney = surplusMoney + hbbSiangMoney + hbbMalamMoney + hrSiangMoney + hrMalamMoney + hkSiangMoney + hkMalamMoney;
                 grandTotalElmMoney += weekTotalElmMoney;
@@ -1846,13 +1863,15 @@
                     weekLetter: String.fromCharCode(97 + w),
                     hasSurplus: (surplusHours > 0),
                     surplusHours: surplusHours,
+                    surplusRate: surplusRate,
+                    surplusRateName: surplusRateName,
                     surplusMoney: surplusMoney.toFixed(2),
                     weekWorkHours: weekWorkHours,
                     netKlm: totalNet,
                     mark: weekMarks[w],
                     datesStr: otDates.join(", ") + "/" + yr2Digit,
                     takLayakHours: (takLayakSiang + takLayakMalam),
-                    takLayakMoney: ((takLayakSiang * 1.125 + takLayakMalam * 1.25) * activeGuard.kadar).toFixed(2),
+                    takLayakMoney: takLayakMoney.toFixed(2),
                     
                     // Category breakdown
                     hbb: { net: netHbb.net, dates: catSlots.HBB.dates.join(", ") + "/" + yr2Digit, layakSiang: layakHbbSiang, siangMoney: hbbSiangMoney.toFixed(2), layakMalam: layakHbbMalam, malamMoney: hbbMalamMoney.toFixed(2) },
@@ -1945,7 +1964,7 @@
 
                 // Formula description
                 let formParts = [];
-                if (b.hasSurplus) formParts.push(`[${activeGuard.kadar.toFixed(2)} x 1.125 x ${b.surplusHours}j]`);
+                if (b.hasSurplus) formParts.push(`[${activeGuard.kadar.toFixed(2)} x ${b.surplusRate} x ${b.surplusHours}j]`);
                 if (item.hbb && item.hbb.net > 0) formParts.push(`[${activeGuard.kadar.toFixed(2)} x pekali HBB x ${item.hbb.net}j]`);
                 if (item.hr && item.hr.net > 0) formParts.push(`[${activeGuard.kadar.toFixed(2)} x pekali HR x ${item.hr.net}j]`);
                 if (item.hk && item.hk.net > 0) formParts.push(`[${activeGuard.kadar.toFixed(2)} x pekali HK x ${item.hk.net}j]`);
@@ -2023,7 +2042,12 @@
                 totalTakLayakHours += wTakLayakH;
                 totalTakLayakMoney += wTakLayakM;
                 totalLayakHours += wLayakH;
-                totalLayakSiangHours += (b.surplusHours || 0) + b.hbb.layakSiang + b.hr.layakSiang + b.hk.layakSiang;
+                if (b.surplusRate === 1.25) {
+                    totalLayakMalamHours += (b.surplusHours || 0);
+                } else {
+                    totalLayakSiangHours += (b.surplusHours || 0);
+                }
+                totalLayakSiangHours += b.hbb.layakSiang + b.hr.layakSiang + b.hk.layakSiang;
                 totalLayakMalamHours += b.hbb.layakMalam + b.hr.layakMalam + b.hk.layakMalam;
 
                 const statusSurplusOrDeficit = b.hasSurplus 
@@ -2077,11 +2101,11 @@
                         <span class="text-[7.5pt] text-slate-600 font-normal">(Jumlah jam bekerja melebihi 45 jam)</span>
                     </td>
                     <td class="font-bold bg-slate-50">HBB</td>
-                    <td class="font-bold bg-slate-50">Siang</td>
-                    <td class="font-bold bg-slate-50">1.125</td>
+                    <td class="font-bold bg-slate-50">${b.surplusRateName}</td>
+                    <td class="font-bold bg-slate-50">${b.surplusRate}</td>
                     <td style="font-weight:bold;">${b.surplusHours}</td>
                     <td style="font-weight:bold; font-size:7.5pt;">
-                        = ${activeGuard.kadar.toFixed(2)} x 1.125 x ${b.surplusHours}<br>= RM${b.surplusMoney}
+                        = ${activeGuard.kadar.toFixed(2)} x ${b.surplusRate} x ${b.surplusHours}<br>= RM${b.surplusMoney}
                     </td>
                 </tr>`;
                 subIdx++;
@@ -2778,6 +2802,15 @@
             }
         }
 
+        function saveAsPdf() {
+            const origTitle = document.title;
+            const gName = (activeGuard && activeGuard.name) ? activeGuard.name.replace(/\s+/g, '_') : 'BORANG';
+            const mName = (document.getElementById("lblMonthHeader") ? document.getElementById("lblMonthHeader").textContent.replace(/\s+/g, '_') : 'BULAN');
+            document.title = `BORANG_OT_${gName}_${mName}`;
+            window.print();
+            setTimeout(() => { document.title = origTitle; }, 1500);
+        }
+
         // =========================================================================
         // MODAL INTERACTION (SETTING SHIFTS LIVE BY CLICKING / TICKING)
         // =========================================================================
@@ -2900,7 +2933,7 @@
             const totalDailyHours = (tempModalHakiki.hours || 0) + (tempModalKlm.grossHours || 0);
             const summaryEl = document.getElementById("modalLiveSummaryText");
             const hoursEl = document.getElementById("modalLiveHoursText");
-            const dayTypeTag = (tempModalDayType === "HKA") ? `<span class="bg-rose-600 text-white font-black px-1.5 py-0.5 rounded text-[10px]">⭐ HKA</span>` : (tempModalDayType === "HRM" ? `<span class="bg-orange-600 text-white font-bold px-1.5 py-0.5 rounded text-[10px]">HRM</span>` : (tempModalDayType === "HKM" ? `<span class="bg-blue-600 text-white font-bold px-1.5 py-0.5 rounded text-[10px]">HKM</span>` : ""));
+            const dayTypeTag = (tempModalDayType === "HKA") ? `<span class="bg-rose-600 text-white font-black px-1.5 py-0.5 rounded text-[10px]">HKA</span>` : (tempModalDayType === "HRM" ? `<span class="bg-orange-600 text-white font-bold px-1.5 py-0.5 rounded text-[10px]">HRM</span>` : (tempModalDayType === "HKM" ? `<span class="bg-blue-600 text-white font-bold px-1.5 py-0.5 rounded text-[10px]">HKM</span>` : ""));
             if (summaryEl) {
                 summaryEl.innerHTML = `Hari: ${dayTypeTag || "Biasa"} &nbsp;|&nbsp; Hakiki: <span class="text-blue-700 font-bold">${hakikiLabel}</span> &nbsp;|&nbsp; OT: <span class="text-amber-700 font-bold">${klmLabel}</span>`;
             }
