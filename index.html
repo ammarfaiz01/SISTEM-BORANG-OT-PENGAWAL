@@ -881,7 +881,7 @@
                     <div id="kursusConfigSection" class="hidden mt-2.5 bg-indigo-50/70 border border-indigo-200 rounded-xl p-3 text-xs">
                         <div class="flex items-center justify-between mb-2">
                             <span class="font-extrabold text-indigo-950 flex items-center gap-1.5">
-                                <i class="fa-solid fa-graduation-cap text-indigo-600"></i> Tetapan Masa &amp; Jam Kursus:
+                                <i class="fa-solid fa-chalkboard-user text-indigo-600"></i> Tetapan Masa &amp; Jam Kursus:
                             </span>
                             <span class="text-[10.5px] bg-indigo-200/80 text-indigo-900 font-bold px-2 py-0.5 rounded">Dikira Jam Bekerja Hakiki</span>
                         </div>
@@ -906,6 +906,36 @@
                                 <button type="button" onclick="setKursusPreset(9, '8.00 Am – 5.00 Pm')" class="px-2 py-1 bg-white hover:bg-indigo-100 border border-indigo-300 rounded text-[10.5px] font-bold text-indigo-950">9j (8.00 Am – 5.00 Pm)</button>
                                 <button type="button" onclick="setKursusPreset(7, '8.30 Am – 3.30 Pm')" class="px-2 py-1 bg-white hover:bg-indigo-100 border border-indigo-300 rounded text-[10.5px] font-bold text-indigo-950">7j (8.30 Am – 3.30 Pm)</button>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- Double & Extended Syif Hakiki (Hanya Muncul Jika Tab HKA Dipilih) -->
+                    <div id="doubleHakikiSection" class="hidden bg-rose-50/70 p-2.5 rounded-xl border border-rose-200 mt-2.5">
+                        <div class="flex items-center justify-between mb-1.5">
+                            <span class="text-[10.5px] font-extrabold text-rose-900 uppercase flex items-center gap-1.5">
+                                <i class="fa-solid fa-layer-group text-rose-600"></i> Pilihan Syif Bekerja Hakiki Semasa Cuti Am (HKA) (16 Jam / 10 Jam / 6 Jam):
+                            </span>
+                            <span class="text-[10px] text-rose-700 font-bold">*Waktu Hakiki Bekerja (HKA)</span>
+                        </div>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
+                            <button type="button" onclick="setModalHakiki('16 Jam\n12.00 Am – 8.00 Am\n4.00 Pm – 12.00 Am', 16, 'DOUBLE_M_PT')" id="btnHakiki_16_M_PT" class="p-2 rounded-lg border text-left font-bold bg-white hover:bg-rose-100 border-rose-200 text-rose-950">
+                                <i class="fa-solid fa-bolt text-rose-500 mr-1"></i> Malam + Petang (16j)<br><span class="text-[9px] font-normal text-rose-800 leading-tight block">12.00 Am – 8.00 Am<br>4.00 Pm – 12.00 Am</span>
+                            </button>
+                            <button type="button" onclick="setModalHakiki('16 Jam\n12.00 Am – 8.00 Am\n8.00 Am – 4.00 Pm', 16, 'DOUBLE_M_P')" id="btnHakiki_16_M_P" class="p-2 rounded-lg border text-left font-bold bg-white hover:bg-rose-100 border-rose-200 text-rose-950">
+                                <i class="fa-solid fa-bolt text-rose-500 mr-1"></i> Malam + Pagi (16j)<br><span class="text-[9px] font-normal text-rose-800 leading-tight block">12.00 Am – 8.00 Am<br>8.00 Am – 4.00 Pm</span>
+                            </button>
+                            <button type="button" onclick="setModalHakiki('16 Jam\n8.00 Am – 4.00 Pm\n4.00 Pm – 12.00 Am', 16, 'DOUBLE_P_PT')" id="btnHakiki_16_P_PT" class="p-2 rounded-lg border text-left font-bold bg-white hover:bg-rose-100 border-rose-200 text-rose-950">
+                                <i class="fa-solid fa-bolt text-rose-500 mr-1"></i> Pagi + Petang (16j)<br><span class="text-[9px] font-normal text-rose-800 leading-tight block">8.00 Am – 4.00 Pm<br>4.00 Pm – 12.00 Am</span>
+                            </button>
+                            <button type="button" onclick="setModalHakiki('16 Jam\n4.00 Pm – 12.00 Am\n12.00 Am – 8.00 Am', 16, 'DOUBLE_PT_M')" id="btnHakiki_16_PT_M" class="p-2 rounded-lg border text-left font-bold bg-white hover:bg-rose-100 border-rose-200 text-rose-950">
+                                <i class="fa-solid fa-bolt text-rose-500 mr-1"></i> Petang + Malam (16j)<br><span class="text-[9px] font-normal text-rose-800 leading-tight block">4.00 Pm – 12.00 Am<br>12.00 Am – 8.00 Am</span>
+                            </button>
+                            <button type="button" onclick="setModalHakiki('10 Jam\n8.00Am – 18.00Pm', 10, 'HAKIKI_10')" id="btnHakiki_10" class="p-2 rounded-lg border text-left font-bold bg-white hover:bg-rose-100 border-rose-200 text-rose-950">
+                                <i class="fa-solid fa-clock text-rose-600 mr-1"></i> Hakiki 10 Jam (Siang)<br><span class="text-[9.5px] font-normal text-rose-800">8.00 Am – 6.00 Pm</span>
+                            </button>
+                            <button type="button" onclick="setModalHakiki('6 Jam\n6.00 Pm – 12.00 Am', 6, 'HAKIKI_6')" id="btnHakiki_6" class="p-2 rounded-lg border text-left font-bold bg-white hover:bg-rose-100 border-rose-200 text-rose-950">
+                                <i class="fa-solid fa-clock text-rose-600 mr-1"></i> Hakiki 6 Jam (Petang)<br><span class="text-[9.5px] font-normal text-rose-800">6.00 Pm – 12.00 Am</span>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -3015,10 +3045,25 @@
 
             // 2. Highlight Hakiki buttons
             const hakikiText = (tempModalHakiki.text || "").trim();
+            const cleanHak = hakikiText.replace(/–|—|-/g, '-').replace(/\s+/g, ' ');
+
             const isHakikiKursus = (hakikiText.startsWith("KURSUS") || tempModalHakiki.type === "KURSUS");
-            const isHakikiPagi = (!isHakikiKursus && /8\.00\s*Am\s*[–-]\s*4\.00\s*Pm/i.test(hakikiText));
-            const isHakikiPetang = (!isHakikiKursus && /4\.00\s*Pm\s*[–-]\s*12\.00\s*Am/i.test(hakikiText));
-            const isHakikiMalam = (!isHakikiKursus && /12\.00\s*Am\s*[–-]\s*8\.00\s*Am/i.test(hakikiText));
+            const isHakiki16 = (tempModalHakiki.hours === 16);
+            const isHakiki10 = (tempModalHakiki.hours === 10);
+            const isHakiki6  = (tempModalHakiki.hours === 6);
+
+            const hasHak12to8 = /12\.00\s*Am\s*-\s*8\.00\s*Am/i.test(cleanHak);
+            const hasHak8to4  = /8\.00\s*Am\s*-\s*4\.00\s*Pm/i.test(cleanHak);
+            const hasHak4to12 = /4\.00\s*Pm\s*-\s*12\.00\s*Am/i.test(cleanHak);
+
+            const isHak16M_PT = (isHakiki16 && hasHak12to8 && hasHak4to12 && cleanHak.indexOf("12.00 Am - 8.00 Am") < cleanHak.indexOf("4.00 Pm - 12.00 Am"));
+            const isHak16PT_M = (isHakiki16 && hasHak12to8 && hasHak4to12 && cleanHak.indexOf("4.00 Pm - 12.00 Am") < cleanHak.indexOf("12.00 Am - 8.00 Am"));
+            const isHak16M_P  = (isHakiki16 && hasHak12to8 && hasHak8to4);
+            const isHak16P_PT = (isHakiki16 && hasHak8to4 && hasHak4to12 && !hasHak12to8);
+
+            const isHakikiPagi = (!isHakikiKursus && !isHakiki16 && !isHakiki10 && !isHakiki6 && /8\.00\s*Am\s*-\s*4\.00\s*Pm/i.test(cleanHak) && !cleanHak.includes("12.00"));
+            const isHakikiPetang = (!isHakikiKursus && !isHakiki16 && !isHakiki10 && !isHakiki6 && /4\.00\s*Pm\s*-\s*12\.00\s*Am/i.test(cleanHak) && !cleanHak.includes("8.00"));
+            const isHakikiMalam = (!isHakikiKursus && !isHakiki16 && !isHakiki10 && !isHakiki6 && /12\.00\s*Am\s*-\s*8\.00\s*Am/i.test(cleanHak) && !cleanHak.includes("4.00"));
             const isHakikiHRM = (hakikiText === "HRM");
             const isHakikiHKM = (hakikiText === "HKM");
             const isHakikiHKA = (hakikiText === "HKA");
@@ -3036,7 +3081,14 @@
                 { id: "btnHakiki_HKM", label: "HKM (Kelepasan)", active: isHakikiHKM },
                 { id: "btnHakiki_HKA", label: "HKA (Cuti Am)", active: isHakikiHKA },
                 { id: "btnHakiki_CR", label: "CR (Cuti Rehat 8j)", active: isHakikiCR },
-                { id: "btnHakiki_CS", label: "CS (Cuti Sakit 8j)", active: isHakikiCS }
+                { id: "btnHakiki_CS", label: "CS (Cuti Sakit 8j)", active: isHakikiCS },
+                // Double & Extended Shifts Hakiki
+                { id: "btnHakiki_16_M_PT", label: "Double Hakiki Malam+Petang (16j)", active: isHak16M_PT },
+                { id: "btnHakiki_16_M_P", label: "Double Hakiki Malam+Pagi (16j)", active: isHak16M_P },
+                { id: "btnHakiki_16_P_PT", label: "Double Hakiki Pagi+Petang (16j)", active: isHak16P_PT },
+                { id: "btnHakiki_16_PT_M", label: "Double Hakiki Petang+Malam (16j)", active: isHak16PT_M },
+                { id: "btnHakiki_10", label: "Hakiki 10 Jam (Siang)", active: isHakiki10 },
+                { id: "btnHakiki_6", label: "Hakiki 6 Jam (Petang)", active: isHakiki6 }
             ];
 
             let hakikiLabel = "Tiada Syif";
@@ -3045,7 +3097,7 @@
                 if (btn) {
                     btn.classList.remove("ring-2", "ring-blue-600", "ring-indigo-600", "bg-blue-100", "bg-indigo-100", "border-blue-600", "border-indigo-600");
                     if (item.active) {
-                        if (item.id === "btnHakiki_KURSUS") {
+                        if (item.id.includes("16") || item.id === "btnHakiki_10" || item.id === "btnHakiki_6" || item.id === "btnHakiki_KURSUS") {
                             btn.classList.add("ring-2", "ring-indigo-600", "bg-indigo-100", "border-indigo-600");
                         } else {
                             btn.classList.add("ring-2", "ring-blue-600", "bg-blue-100", "border-blue-600");
@@ -3062,6 +3114,16 @@
                     kursusSection.classList.remove("hidden");
                 } else {
                     kursusSection.classList.add("hidden");
+                }
+            }
+
+            // Toggle Double Hakiki Section (HANYA MUNCUL APABILA TAB CUTI AM / HKA DIPILIH)
+            const doubleHakikiSec = document.getElementById("doubleHakikiSection");
+            if (doubleHakikiSec) {
+                if (tempModalDayType === "HKA") {
+                    doubleHakikiSec.classList.remove("hidden");
+                } else {
+                    doubleHakikiSec.classList.add("hidden");
                 }
             }
 
