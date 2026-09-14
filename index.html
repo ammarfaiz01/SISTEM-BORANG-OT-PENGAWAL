@@ -1880,9 +1880,9 @@
 
                 // Category trackers for HBB, HR (HRM/HKM), HK (HKA)
                 let catSlots = {
-                    HBB: { gross: 0, siang: 0, malam: 0, slots: 0, dates: [] },
-                    HR:  { gross: 0, siang: 0, malam: 0, slots: 0, dates: [] },
-                    HK:  { gross: 0, siang: 0, malam: 0, slots: 0, dates: [] }
+                    HBB: { gross: 0, siang: 0, malam: 0, rest: 0, slots: 0, dates: [] },
+                    HR:  { gross: 0, siang: 0, malam: 0, rest: 0, slots: 0, dates: [] },
+                    HK:  { gross: 0, siang: 0, malam: 0, rest: 0, slots: 0, dates: [] }
                 };
 
                 for (let d = 0; d < 7; d++) {
@@ -1921,8 +1921,8 @@
                     const kGross = cellData.kGross || 0;
                     if (kGross > 0) {
                         // Safe fallback for siang/malam hours if missing
-                        let kSiang = (cellData.kSiang !== undefined) ? cellData.kSiang : (kGross === 8 ? 7 : (kGross === 16 ? 13 : (kGross === 10 ? 9 : kGross)));
-                        let kMalam = (cellData.kMalam !== undefined) ? cellData.kMalam : (kGross === 8 && kSiang === 0 ? 6 : (kGross === 16 && kSiang === 13 ? 2 : 0));
+                        let kSiang = (cellData.kSiang !== undefined) ? cellData.kSiang : (kGross === 8 ? 7 : (kGross === 16 ? 7 : (kGross === 10 ? 9 : (kGross === 6 ? 4 : kGross))));
+                        let kMalam = (cellData.kMalam !== undefined) ? cellData.kMalam : (kGross === 8 && kSiang === 0 ? 6 : (kGross === 16 && kSiang === 7 ? 7 : (kGross === 6 && kSiang === 4 ? 2 : 0)));
 
                         weekGrossKlm += kGross;
                         weekGrossSiang += kSiang;
@@ -1937,9 +1937,13 @@
                         if (isHKA || cellData.dayType === "HKA" || cellData.isHKA === true) cat = "HK";
                         else if (isHRM || isHKM || cellData.dayType === "HRM" || cellData.dayType === "HKM") cat = "HR";
 
+                        let kRest = (cellData.kRest !== undefined) ? cellData.kRest : (kGross - (kSiang + kMalam));
+                        if (kRest < 0) kRest = 0;
+
                         catSlots[cat].gross += kGross;
                         catSlots[cat].siang += kSiang;
                         catSlots[cat].malam += kMalam;
+                        catSlots[cat].rest  += kRest;
                         catSlots[cat].slots++;
                         catSlots[cat].dates.push(dateStr);
 
@@ -1954,10 +1958,14 @@
                 weekHoursList.push(weekWorkHours);
                 weekKlmGrossList.push(weekGrossKlm);
 
-                // DEDUCTION OF REST HOURS PER CATEGORY
+                // DEDUCTION OF REST HOURS PER CATEGORY (Setiap 8 jam syif ditolak 1 jam masa rehat)
                 function calcNetCategory(catObj) {
                     if (catObj.gross <= 0) return { gross: 0, rest: 0, net: 0, siang: 0, malam: 0 };
-                    const rest = (catObj.gross === 8) ? 1 : (catObj.gross === 16 ? 2 : (catObj.gross === 24 ? 3 : (catObj.gross === 34 ? 4 : (catObj.slots > 0 ? catObj.slots : 0))));
+                    // Kira jam rehat tepat: tolak 1j untuk setiap 8j bertugas, atau kGross - (siang + malam)
+                    let rest = (catObj.rest !== undefined && catObj.rest > 0) ? catObj.rest : (catObj.gross - (catObj.siang + catObj.malam));
+                    if (rest <= 0 && catObj.gross >= 8) {
+                        rest = Math.floor(catObj.gross / 8);
+                    }
                     const net = Math.max(0, catObj.gross - rest);
                     return { gross: catObj.gross, rest: rest, net: net, siang: catObj.siang, malam: catObj.malam };
                 }
