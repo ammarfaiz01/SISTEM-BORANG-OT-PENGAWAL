@@ -87,6 +87,12 @@
             font-weight: bold;
         }
 
+        .kursus-box {
+            background-color: #e0e7ff !important; /* Soft Indigo (Kursus) */
+            color: #312e81 !important;
+            font-weight: bold;
+        }
+
         .klm-box {
             background-color: #fdba74 !important; /* Warm Orange / Amber (KLM) */
             color: #7c2d12 !important;
@@ -283,31 +289,59 @@
                 </div>
             </div>
 
-            <!-- Officer Profile Details (Editable) -->
-            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 text-xs bg-slate-50/70 p-3 rounded-xl border border-slate-200 mb-4">
-                <div>
-                    <span class="text-slate-500 text-[10.5px] block font-semibold">Nama Pegawai:</span>
-                    <input type="text" id="profName" oninput="updateProfileLive()" class="w-full bg-white border border-slate-300 rounded px-2 py-1 font-bold text-slate-900 text-xs">
+            <!-- Officer Profile Details (Editable & Live Sync) -->
+            <div class="bg-slate-50/80 p-3.5 rounded-xl border border-slate-200 mb-4">
+                <div class="flex flex-wrap items-center justify-between gap-1 mb-2.5">
+                    <span class="text-xs font-black text-slate-800 uppercase flex items-center gap-1.5">
+                        <i class="fa-solid fa-id-card text-blue-600"></i> Maklumat Profil Pegawai (Boleh Disunting &amp; Auto-Update Dropdown):
+                    </span>
+                    <span class="text-[10.5px] text-slate-500 italic">* Sebarang kemaskini di bawah akan mengemas kini dropdown anggota, jadual &amp; borang cetakan</span>
                 </div>
-                <div>
-                    <span class="text-slate-500 text-[10.5px] block font-semibold">No. Kad Pengenalan:</span>
-                    <input type="text" id="profNokp" oninput="updateProfileLive()" class="w-full bg-white border border-slate-300 rounded px-2 py-1 font-semibold text-slate-900 text-xs">
-                </div>
-                <div>
-                    <span class="text-slate-500 text-[10.5px] block font-semibold">Gaji Pokok (RM):</span>
-                    <input type="number" step="0.01" id="profGaji" oninput="onGajiChangeLive()" class="w-full bg-white border border-slate-300 rounded px-2 py-1 font-bold text-slate-900 text-xs">
-                </div>
-                <div>
-                    <span class="text-slate-500 text-[10.5px] block font-semibold">Kadar Sejam (RM):</span>
-                    <input type="text" id="profKadar" readonly class="w-full bg-slate-100 border border-slate-300 rounded px-2 py-1 font-black text-blue-700 text-xs">
-                </div>
-                <div>
-                    <span class="text-slate-500 text-[10.5px] block font-semibold">Had Siling 1/3 Gaji:</span>
-                    <input type="text" id="profSiling" readonly class="w-full bg-slate-100 border border-slate-300 rounded px-2 py-1 font-black text-rose-700 text-xs">
-                </div>
-                <div>
-                    <span class="text-slate-500 text-[10.5px] block font-semibold">No. Gaji / Pusat:</span>
-                    <input type="text" id="profNoGaji" oninput="updateProfileLive()" class="w-full bg-white border border-slate-300 rounded px-2 py-1 font-semibold text-slate-900 text-xs">
+                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 text-xs">
+                    <div>
+                        <span class="text-slate-600 text-[10.5px] block font-bold">Nama Pegawai:</span>
+                        <input type="text" id="profName" oninput="updateProfileLive()" class="w-full bg-white border border-slate-300 rounded px-2.5 py-1 font-bold text-slate-900 text-xs focus:ring-1 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <span class="text-slate-600 text-[10.5px] block font-bold">No. Kad Pengenalan:</span>
+                        <input type="text" id="profNokp" oninput="updateProfileLive()" class="w-full bg-white border border-slate-300 rounded px-2.5 py-1 font-semibold text-slate-900 text-xs focus:ring-1 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <span class="text-slate-600 text-[10.5px] block font-bold">Jawatan:</span>
+                        <input type="text" id="profJawatan" oninput="updateProfileLive()" class="w-full bg-white border border-slate-300 rounded px-2.5 py-1 font-semibold text-slate-900 text-xs focus:ring-1 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <span class="text-slate-600 text-[10.5px] block font-bold">No. Telefon:</span>
+                        <input type="text" id="profTel" oninput="updateProfileLive()" class="w-full bg-white border border-slate-300 rounded px-2.5 py-1 font-semibold text-slate-900 text-xs focus:ring-1 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <span class="text-slate-600 text-[10.5px] block font-bold">Gaji Pokok (RM):</span>
+                        <input type="number" step="0.01" id="profGaji" oninput="onGajiChangeLive()" class="w-full bg-white border border-slate-300 rounded px-2.5 py-1 font-bold text-slate-900 text-xs focus:ring-1 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <span class="text-slate-600 text-[10.5px] block font-bold">Kadar Sejam (RM):</span>
+                        <input type="text" id="profKadar" readonly class="w-full bg-slate-100 border border-slate-300 rounded px-2.5 py-1 font-black text-blue-700 text-xs" title="Auto: (Gaji x 12) / (313 x 8)">
+                    </div>
+                    <div>
+                        <span class="text-slate-600 text-[10.5px] block font-bold">Had Siling 1/3 Gaji:</span>
+                        <input type="text" id="profSiling" readonly class="w-full bg-slate-100 border border-slate-300 rounded px-2.5 py-1 font-black text-rose-700 text-xs" title="Auto: Gaji / 3">
+                    </div>
+                    <div>
+                        <span class="text-slate-600 text-[10.5px] block font-bold">No. Gaji:</span>
+                        <input type="text" id="profNoGaji" oninput="updateProfileLive()" class="w-full bg-white border border-slate-300 rounded px-2.5 py-1 font-semibold text-slate-900 text-xs focus:ring-1 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <span class="text-slate-600 text-[10.5px] block font-bold">No. Pusat Pembayar:</span>
+                        <input type="text" id="profPusat" oninput="updateProfileLive()" class="w-full bg-white border border-slate-300 rounded px-2.5 py-1 font-semibold text-slate-900 text-xs focus:ring-1 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <span class="text-slate-600 text-[10.5px] block font-bold">Nama Bank:</span>
+                        <input type="text" id="profBank" oninput="updateProfileLive()" class="w-full bg-white border border-slate-300 rounded px-2.5 py-1 font-semibold text-slate-900 text-xs focus:ring-1 focus:ring-blue-500">
+                    </div>
+                    <div class="col-span-2">
+                        <span class="text-slate-600 text-[10.5px] block font-bold">No. Akaun Bank:</span>
+                        <input type="text" id="profAkaun" oninput="updateProfileLive()" class="w-full bg-white border border-slate-300 rounded px-2.5 py-1 font-semibold text-slate-900 text-xs focus:ring-1 focus:ring-blue-500">
+                    </div>
                 </div>
             </div>
 
@@ -792,28 +826,25 @@
                         </label>
                         <span class="text-[10px] text-slate-500 font-semibold">(Menentukan Kadar Bayaran OT)</span>
                     </div>
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-                        <button type="button" onclick="setModalDayType('HBB')" id="btnDayType_HBB" class="p-2 rounded-lg border font-bold text-center transition bg-white border-slate-300 text-slate-800 hover:bg-slate-50">
-                            ⚪ Hari Biasa (HBB)<br><span class="text-[9.5px] font-normal text-slate-500">Pekali 1.125 / 1.25</span>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <button type="button" onclick="setModalDayType('HBB')" id="btnDayType_HBB" class="p-2.5 rounded-lg border font-bold text-center transition bg-white border-slate-300 text-slate-800 hover:bg-slate-50">
+                            ⚪ Hari Biasa (HBB)<br><span class="text-[9.5px] font-normal text-slate-500">Pekali 1.125 (Siang) / 1.25 (Malam)</span>
                         </button>
-                        <button type="button" onclick="setModalDayType('HRM')" id="btnDayType_HRM" class="p-2 rounded-lg border font-bold text-center transition bg-orange-50 border-orange-300 text-amber-950 hover:bg-orange-100">
-                            🟠 Rehat (HRM)<br><span class="text-[9.5px] font-normal text-amber-800">Pekali 1.25 / 1.50</span>
-                        </button>
-                        <button type="button" onclick="setModalDayType('HKM')" id="btnDayType_HKM" class="p-2 rounded-lg border font-bold text-center transition bg-blue-50 border-blue-300 text-blue-950 hover:bg-blue-100">
-                            🔵 Kelepasan (HKM)<br><span class="text-[9.5px] font-normal text-blue-800">Pekali 1.25 / 1.50</span>
-                        </button>
-                        <button type="button" onclick="setModalDayType('HKA')" id="btnDayType_HKA" class="p-2 rounded-lg border font-black text-center transition bg-rose-50 border-rose-300 text-rose-950 hover:bg-rose-100">
-                            🔴 Cuti Am (HKA)<br><span class="text-[9.5px] font-normal text-rose-800">Pekali 1.75 / 2.00</span>
+                        <button type="button" onclick="setModalDayType('HKA')" id="btnDayType_HKA" class="p-2.5 rounded-lg border font-black text-center transition bg-rose-50 border-rose-300 text-rose-950 hover:bg-rose-100">
+                            🔴 Cuti Am (HKA)<br><span class="text-[9.5px] font-normal text-rose-800">Pekali 1.75 (Siang) / 2.00 (Malam)</span>
                         </button>
                     </div>
                 </div>
 
                 <!-- 1. PILIH SYIF HAKIKI -->
                 <div>
-                    <label class="text-xs font-bold text-slate-800 uppercase block mb-2">
-                        1. Pilih Syif Hakiki (8 Jam / Cuti Rehat):
-                    </label>
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label class="text-xs font-bold text-slate-800 uppercase block">
+                            1. Pilih Syif Hakiki (8 Jam / Cuti Rehat / Kursus):
+                        </label>
+                        <span class="text-[10px] text-blue-700 font-bold">*Waktu Bekerja Hakiki (45 Jam/Minggu)</span>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs">
                         <button type="button" onclick="setModalHakiki('8 Jam\n12.00 Am – 8.00Am', 8, 'MALAM')" id="btnHakiki_M" class="p-2.5 rounded-lg border text-left font-bold transition hover:bg-indigo-50 border-slate-300">
                             <i class="fa-solid fa-moon text-indigo-500 mr-1"></i> Malam (8j)<br><span class="text-[10px] font-normal text-slate-500">12.00 Am – 8.00 Am</span>
                         </button>
@@ -823,8 +854,11 @@
                         <button type="button" onclick="setModalHakiki('8 Jam\n4.00 Pm – 12.00 Am', 8, 'PETANG')" id="btnHakiki_PT" class="p-2.5 rounded-lg border text-left font-bold transition hover:bg-amber-50 border-slate-300">
                             <i class="fa-solid fa-cloud-sun text-orange-500 mr-1"></i> Petang (8j)<br><span class="text-[10px] font-normal text-slate-500">4.00 Pm – 12.00 Am</span>
                         </button>
+                        <button type="button" onclick="setModalHakikiKursus()" id="btnHakiki_KURSUS" class="p-2.5 rounded-lg border text-left font-black transition bg-indigo-50 hover:bg-indigo-100 border-indigo-300 text-indigo-950">
+                            <i class="fa-solid fa-graduation-cap text-indigo-600 mr-1"></i> KURSUS<br><span class="text-[10px] font-normal text-indigo-800">Bekerja Hakiki</span>
+                        </button>
                         <button type="button" onclick="setModalHakiki('-', 0, 'NONE')" id="btnHakiki_NONE" class="p-2.5 rounded-lg border text-left font-bold transition hover:bg-slate-100 border-slate-300 text-slate-700">
-                            <i class="fa-solid fa-ban text-slate-400 mr-1"></i> Tiada Syif (-)<br><span class="text-[10px] font-normal text-slate-500">Tiada Jam Hakiki (0j)</span>
+                            <i class="fa-solid fa-ban text-slate-400 mr-1"></i> Tiada Syif (-)<br><span class="text-[10px] font-normal text-slate-500">0 Jam Hakiki</span>
                         </button>
                         <button type="button" onclick="setModalHakiki('HRM', 0, 'HRM')" id="btnHakiki_HRM" class="p-2.5 rounded-lg border text-left font-black transition bg-orange-50 hover:bg-orange-100 border-orange-300 text-amber-950">
                             <i class="fa-solid fa-leaf text-orange-600 mr-1"></i> HRM<br><span class="text-[10px] font-normal text-orange-800">Rehat Mingguan (0j)</span>
@@ -836,11 +870,43 @@
                             <i class="fa-solid fa-star text-rose-600 mr-1"></i> HKA<br><span class="text-[10px] font-normal text-rose-800">Cuti Kelepasan Am (0j)</span>
                         </button>
                         <button type="button" onclick="setModalHakiki('CR\n(Cuti Rehat)', 8, 'CR')" id="btnHakiki_CR" class="p-2.5 rounded-lg border text-left font-black transition bg-emerald-50 hover:bg-emerald-100 border-emerald-300 text-emerald-950">
-                            <i class="fa-solid fa-umbrella-beach text-emerald-600 mr-1"></i> CR (8j Hakiki)<br><span class="text-[10px] font-normal text-emerald-800">Cuti Rehat Tahunan</span>
+                            <i class="fa-solid fa-umbrella-beach text-emerald-600 mr-1"></i> CR (8j Hakiki)<br><span class="text-[10px] font-normal text-emerald-800">Cuti Rehat</span>
                         </button>
                         <button type="button" onclick="setModalHakiki('CS\n(Cuti Sakit)', 8, 'CS')" id="btnHakiki_CS" class="p-2.5 rounded-lg border text-left font-black transition bg-amber-50 hover:bg-amber-100 border-amber-300 text-amber-950">
                             <i class="fa-solid fa-notes-medical text-amber-600 mr-1"></i> CS (8j Hakiki)<br><span class="text-[10px] font-normal text-amber-800">Cuti Sakit / MC</span>
                         </button>
+                    </div>
+
+                    <!-- KURSUS CUSTOM CONFIGURATION SECTION (Toggles when Kursus is selected) -->
+                    <div id="kursusConfigSection" class="hidden mt-2.5 bg-indigo-50/70 border border-indigo-200 rounded-xl p-3 text-xs">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="font-extrabold text-indigo-950 flex items-center gap-1.5">
+                                <i class="fa-solid fa-graduation-cap text-indigo-600"></i> Tetapan Masa &amp; Jam Kursus:
+                            </span>
+                            <span class="text-[10.5px] bg-indigo-200/80 text-indigo-900 font-bold px-2 py-0.5 rounded">Dikira Jam Bekerja Hakiki</span>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-2">
+                            <div>
+                                <label class="text-[11px] font-bold text-slate-700 block mb-1">Bilangan Jam Hakiki Kursus:</label>
+                                <div class="flex items-center gap-1.5">
+                                    <input type="number" id="kursusHoursInput" value="8" min="1" max="24" oninput="onKursusConfigChange()" class="w-20 bg-white border border-indigo-300 rounded px-2.5 py-1 font-black text-indigo-900 text-xs text-center focus:ring-1 focus:ring-indigo-500">
+                                    <span class="text-xs font-bold text-slate-600">Jam Hakiki</span>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="text-[11px] font-bold text-slate-700 block mb-1">Masa / Waktu Kursus:</label>
+                                <input type="text" id="kursusTimeInput" value="8.00 Am – 4.00 Pm" oninput="onKursusConfigChange()" placeholder="Contoh: 8.00 Am – 4.00 Pm" class="w-full bg-white border border-indigo-300 rounded px-2.5 py-1 font-semibold text-slate-900 text-xs focus:ring-1 focus:ring-indigo-500">
+                            </div>
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-bold text-slate-500 block mb-1">Pilihan Cepat Waktu Kursus Lazim:</span>
+                            <div class="flex flex-wrap gap-1.5">
+                                <button type="button" onclick="setKursusPreset(8, '8.00 Am – 4.00 Pm')" class="px-2 py-1 bg-white hover:bg-indigo-100 border border-indigo-300 rounded text-[10.5px] font-bold text-indigo-950">8j (8.00 Am – 4.00 Pm)</button>
+                                <button type="button" onclick="setKursusPreset(8, '8.30 Am – 4.30 Pm')" class="px-2 py-1 bg-white hover:bg-indigo-100 border border-indigo-300 rounded text-[10.5px] font-bold text-indigo-950">8j (8.30 Am – 4.30 Pm)</button>
+                                <button type="button" onclick="setKursusPreset(9, '8.00 Am – 5.00 Pm')" class="px-2 py-1 bg-white hover:bg-indigo-100 border border-indigo-300 rounded text-[10.5px] font-bold text-indigo-950">9j (8.00 Am – 5.00 Pm)</button>
+                                <button type="button" onclick="setKursusPreset(7, '8.30 Am – 3.30 Pm')" class="px-2 py-1 bg-white hover:bg-indigo-100 border border-indigo-300 rounded text-[10.5px] font-bold text-indigo-950">7j (8.30 Am – 3.30 Pm)</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -1229,7 +1295,7 @@
     <!-- =================================================================== -->
     <script>
         // 1. DATA MASTER PEGAWAI KESELAMATAN
-        const GUARDS_LIST = [
+        const DEFAULT_GUARDS_LIST = [
             {
                 id: 0,
                 name: "MOHD KHAIRUL RIJAL BIN KASIM",
@@ -1316,7 +1382,36 @@
             }
         ];
 
-        
+        const GUARDS_MASTER_KEY = "BORANG_OT_GUARDS_MASTER_V3";
+
+        function getGuardsMasterList() {
+            try {
+                const stored = localStorage.getItem(GUARDS_MASTER_KEY);
+                if (stored) {
+                    const parsed = JSON.parse(stored);
+                    if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+                }
+            } catch (e) {}
+            return JSON.parse(JSON.stringify(DEFAULT_GUARDS_LIST));
+        }
+
+        let GUARDS_LIST = getGuardsMasterList();
+
+        function renderGuardDropdownOptions() {
+            const select = document.getElementById("guardSelect");
+            if (!select) return;
+            const curVal = select.value || (activeGuard ? activeGuard.id : 1);
+            select.innerHTML = "";
+            GUARDS_LIST.forEach((g, idx) => {
+                const opt = document.createElement("option");
+                opt.value = g.id.toString();
+                const telStr = g.tel ? ` | Tel: ${g.tel}` : "";
+                opt.textContent = `${idx + 1}. ${g.name}${telStr} (Gaji: RM ${g.gaji.toFixed(2)} | Kadar: RM ${g.kadar.toFixed(2)})`;
+                select.appendChild(opt);
+            });
+            select.value = curVal.toString();
+        }
+
         // Helper to ensure activeGuard is always a 100% valid, non-null object with all properties
         function ensureValidActiveGuard(g) {
             const defaultG = GUARDS_LIST[1] || {
@@ -1352,6 +1447,7 @@
 
         // 3. INITIALIZATION
         document.addEventListener("DOMContentLoaded", () => {
+                renderGuardDropdownOptions();
             try {
                 seedDefaultRecordsIfEmpty();
                 const lastActiveKey = localStorage.getItem(DB_LAST_ACTIVE_KEY);
@@ -1560,19 +1656,26 @@
 
         function updateProfileInputs() {
             activeGuard = ensureValidActiveGuard(activeGuard);
-            const profName = document.getElementById("profName");
-            const profNokp = document.getElementById("profNokp");
-            const profGaji = document.getElementById("profGaji");
-            const profKadar = document.getElementById("profKadar");
-            const profSiling = document.getElementById("profSiling");
-            const profNoGaji = document.getElementById("profNoGaji");
+            const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
+            setVal("profName", activeGuard.name || "");
+            setVal("profNokp", activeGuard.nokp || "");
+            setVal("profJawatan", activeGuard.jawatan || "PEMBANTU KESELAMATAN KP1");
+            setVal("profTel", activeGuard.tel || "");
+            setVal("profGaji", (activeGuard.gaji || 0).toFixed(2));
+            setVal("profKadar", (activeGuard.kadar || 0).toFixed(2));
+            setVal("profSiling", (activeGuard.siling || 0).toFixed(2));
+            setVal("profNoGaji", activeGuard.nogaji || "");
+            setVal("profPusat", activeGuard.pusat || "8041");
+            setVal("profBank", activeGuard.bank || "MAYBANK BERHAD");
+            setVal("profAkaun", activeGuard.akaun || "");
+        }
 
-            if (profName) profName.value = activeGuard.name || "";
-            if (profNokp) profNokp.value = activeGuard.nokp || "";
-            if (profGaji) profGaji.value = (activeGuard.gaji || 0).toFixed(2);
-            if (profKadar) profKadar.value = (activeGuard.kadar || 0).toFixed(2);
-            if (profSiling) profSiling.value = (activeGuard.siling || 0).toFixed(2);
-            if (profNoGaji) profNoGaji.value = `${activeGuard.nogaji || ""} / ${activeGuard.pusat || ""}`;
+        function syncGuardDropdownOption(guard) {
+            if (!guard || guard.id === undefined) return;
+            try {
+                localStorage.setItem(GUARDS_MASTER_KEY, JSON.stringify(GUARDS_LIST));
+            } catch (e) {}
+            renderGuardDropdownOptions();
         }
 
         function onGajiChangeLive() {
@@ -1582,15 +1685,33 @@
             activeGuard.siling = parseFloat((g / 3).toFixed(2));
             document.getElementById("profKadar").value = activeGuard.kadar.toFixed(2);
             document.getElementById("profSiling").value = activeGuard.siling.toFixed(2);
+
+            // Sync to master list
+            if (GUARDS_LIST[activeGuard.id]) {
+                Object.assign(GUARDS_LIST[activeGuard.id], activeGuard);
+            }
+            syncGuardDropdownOption(activeGuard);
+            updateActiveRecordBadge();
             calculateAndRenderAll(true);
         }
 
         function updateProfileLive() {
-            activeGuard.name = document.getElementById("profName").value;
-            activeGuard.nokp = document.getElementById("profNokp").value;
-            const noGajiParts = (document.getElementById("profNoGaji").value || "").split('/');
-            if (noGajiParts.length > 0) activeGuard.nogaji = noGajiParts[0].trim();
-            if (noGajiParts.length > 1) activeGuard.pusat = noGajiParts[1].trim();
+            const getVal = (id) => (document.getElementById(id)?.value || "").trim();
+            activeGuard.name = getVal("profName") || activeGuard.name;
+            activeGuard.nokp = getVal("profNokp") || activeGuard.nokp;
+            activeGuard.jawatan = getVal("profJawatan") || activeGuard.jawatan || "PEMBANTU KESELAMATAN KP1";
+            activeGuard.tel = getVal("profTel") || activeGuard.tel;
+            activeGuard.nogaji = getVal("profNoGaji") || activeGuard.nogaji;
+            activeGuard.pusat = getVal("profPusat") || activeGuard.pusat;
+            activeGuard.bank = getVal("profBank") || activeGuard.bank;
+            activeGuard.akaun = getVal("profAkaun") || activeGuard.akaun;
+
+            // Sync to master list
+            if (GUARDS_LIST[activeGuard.id]) {
+                Object.assign(GUARDS_LIST[activeGuard.id], activeGuard);
+            }
+            syncGuardDropdownOption(activeGuard);
+            updateActiveRecordBadge();
             calculateAndRenderAll(true);
         }
 
@@ -1623,6 +1744,25 @@
             
             text = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
             text = text.replace(/–|â€“|—/g, '-');
+
+            // Kursus formatting
+            if (text.startsWith("KURSUS")) {
+                const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+                let hoursStr = "8 Jam";
+                let timeStr = "";
+                if (lines.length >= 3) {
+                    hoursStr = lines[1];
+                    timeStr = lines.slice(2).join(' ');
+                } else if (lines.length === 2) {
+                    if (lines[1].includes("Jam") || lines[1].includes("j")) {
+                        hoursStr = lines[1];
+                    } else {
+                        timeStr = lines[1];
+                    }
+                }
+                const formattedTime = timeStr ? `<div style="font-size:6.3pt; line-height:1.15; margin-top:1px;">${timeStr}</div>` : "";
+                return `<div style="font-weight:bold; font-size:7.5pt; color:#312e81; line-height:1.1;">KURSUS<br><span style="font-size:6.8pt; font-weight:bold;">(${hoursStr})</span></div>${formattedTime}`;
+            }
             
             // Extract all time intervals like "12.00 Am - 8.00 Am" or "8.00 Am - 4.00 Pm"
             const timeIntervalRegex = /\d{1,2}(?:\.\d{2})?\s*(?:Am|Pm|am|pm)\s*[-]\s*\d{1,2}(?:\.\d{2})?\s*(?:Am|Pm|am|pm)/gi;
@@ -1727,7 +1867,8 @@
                     const isHKA = (cellData.hakiki === "HKA" || cellData.dayType === "HKA" || cellData.isHKA === true);
                     const isCR = (cellData.hakiki && cellData.hakiki.startsWith("CR"));
                     const isCS = (cellData.hakiki && cellData.hakiki.startsWith("CS"));
-                    const isOff = (cellData.hakiki === "HRM" || cellData.hakiki === "HKM" || cellData.hakiki === "HKA" || (cellData.hHours === 0 && !isCR && !isCS));
+                    const isKursus = (cellData.hakiki && cellData.hakiki.startsWith("KURSUS"));
+                    const isOff = (cellData.hakiki === "HRM" || cellData.hakiki === "HKM" || cellData.hakiki === "HKA" || (cellData.hHours === 0 && !isCR && !isCS && !isKursus));
                     
                     let offCls = "";
                     if (cellData.hakiki === "HRM") offCls = "hrm-box";
@@ -1735,11 +1876,12 @@
                     else if (cellData.hakiki === "HKA" || isHKA) offCls = "hka-box";
                     else if (isCR) offCls = "cr-box";
                     else if (isCS) offCls = "cs-box";
+                    else if (isKursus) offCls = "kursus-box";
 
                     let hakikiFormatted = formatCellContent(cellData.hakiki);
                     hakikiCells += `<td class="interactive-cell ${offCls}" onclick="openEditModal(${w}, ${d})" title="Klik untuk ubah">${hakikiFormatted}</td>`;
 
-                    // Hakiki Hours (Shifts, CR, CS contribute to weekWorkHours)
+                    // Hakiki Hours (Shifts, CR, CS, KURSUS contribute to weekWorkHours)
                     const hHours = (cellData.hHours !== undefined) ? cellData.hHours : (isOff ? 0 : 8);
                     if (hHours > 0) {
                         weekWorkHours += hHours;
@@ -2821,25 +2963,49 @@
             updateModalButtonStates();
         }
 
+        function setModalHakikiKursus() {
+            let hours = parseInt(document.getElementById("kursusHoursInput")?.value) || 8;
+            let time = (document.getElementById("kursusTimeInput")?.value || "8.00 Am – 4.00 Pm").trim();
+            tempModalHakiki = {
+                text: `KURSUS\n${hours} Jam\n${time}`,
+                hours: hours,
+                type: "KURSUS"
+            };
+            updateModalButtonStates();
+        }
+
+        function setKursusPreset(hours, time) {
+            const hInput = document.getElementById("kursusHoursInput");
+            const tInput = document.getElementById("kursusTimeInput");
+            if (hInput) hInput.value = hours;
+            if (tInput) tInput.value = time;
+            setModalHakikiKursus();
+        }
+
+        function onKursusConfigChange() {
+            let hours = parseInt(document.getElementById("kursusHoursInput")?.value) || 8;
+            let time = (document.getElementById("kursusTimeInput")?.value || "8.00 Am – 4.00 Pm").trim();
+            tempModalHakiki = {
+                text: `KURSUS\n${hours} Jam\n${time}`,
+                hours: hours,
+                type: "KURSUS"
+            };
+            updateModalButtonStates();
+        }
+
         function updateModalButtonStates() {
-            // 1. Highlight DayType buttons
+            // 1. Highlight DayType buttons (Only HBB and HKA)
             const dayTypeBtns = [
                 { id: "btnDayType_HBB", type: "HBB" },
-                { id: "btnDayType_HRM", type: "HRM" },
-                { id: "btnDayType_HKM", type: "HKM" },
                 { id: "btnDayType_HKA", type: "HKA" }
             ];
             dayTypeBtns.forEach(item => {
                 const btn = document.getElementById(item.id);
                 if (btn) {
-                    btn.classList.remove("ring-2", "ring-slate-700", "ring-blue-600", "ring-rose-600", "ring-orange-500", "bg-slate-200", "bg-blue-100", "bg-rose-100", "bg-orange-100");
+                    btn.classList.remove("ring-2", "ring-slate-700", "ring-rose-600", "bg-slate-200", "bg-rose-100");
                     if (tempModalDayType === item.type) {
                         if (item.type === "HKA") {
                             btn.classList.add("ring-2", "ring-rose-600", "bg-rose-100");
-                        } else if (item.type === "HRM") {
-                            btn.classList.add("ring-2", "ring-orange-500", "bg-orange-100");
-                        } else if (item.type === "HKM") {
-                            btn.classList.add("ring-2", "ring-blue-600", "bg-blue-100");
                         } else {
                             btn.classList.add("ring-2", "ring-slate-700", "bg-slate-200");
                         }
@@ -2849,20 +3015,22 @@
 
             // 2. Highlight Hakiki buttons
             const hakikiText = (tempModalHakiki.text || "").trim();
-            const isHakikiPagi = /8\.00\s*Am\s*[–-]\s*4\.00\s*Pm/i.test(hakikiText);
-            const isHakikiPetang = /4\.00\s*Pm\s*[–-]\s*12\.00\s*Am/i.test(hakikiText);
-            const isHakikiMalam = /12\.00\s*Am\s*[–-]\s*8\.00\s*Am/i.test(hakikiText);
+            const isHakikiKursus = (hakikiText.startsWith("KURSUS") || tempModalHakiki.type === "KURSUS");
+            const isHakikiPagi = (!isHakikiKursus && /8\.00\s*Am\s*[–-]\s*4\.00\s*Pm/i.test(hakikiText));
+            const isHakikiPetang = (!isHakikiKursus && /4\.00\s*Pm\s*[–-]\s*12\.00\s*Am/i.test(hakikiText));
+            const isHakikiMalam = (!isHakikiKursus && /12\.00\s*Am\s*[–-]\s*8\.00\s*Am/i.test(hakikiText));
             const isHakikiHRM = (hakikiText === "HRM");
             const isHakikiHKM = (hakikiText === "HKM");
             const isHakikiHKA = (hakikiText === "HKA");
             const isHakikiCR = (hakikiText.startsWith("CR"));
             const isHakikiCS = (hakikiText.startsWith("CS"));
-            const isHakikiNone = (!hakikiText || hakikiText === "-" || (tempModalHakiki.hours === 0 && !isHakikiHRM && !isHakikiHKM && !isHakikiHKA));
+            const isHakikiNone = (!hakikiText || hakikiText === "-" || (tempModalHakiki.hours === 0 && !isHakikiHRM && !isHakikiHKM && !isHakikiHKA && !isHakikiKursus));
 
             const hakikiBtns = [
                 { id: "btnHakiki_M", label: "Malam (8j)", active: isHakikiMalam },
                 { id: "btnHakiki_P", label: "Pagi (8j)", active: isHakikiPagi },
                 { id: "btnHakiki_PT", label: "Petang (8j)", active: isHakikiPetang },
+                { id: "btnHakiki_KURSUS", label: `KURSUS (${tempModalHakiki.hours || 8}j Hakiki)`, active: isHakikiKursus },
                 { id: "btnHakiki_NONE", label: "Tiada Syif (0j)", active: isHakikiNone },
                 { id: "btnHakiki_HRM", label: "HRM (Rehat)", active: isHakikiHRM },
                 { id: "btnHakiki_HKM", label: "HKM (Kelepasan)", active: isHakikiHKM },
@@ -2875,13 +3043,27 @@
             hakikiBtns.forEach(item => {
                 const btn = document.getElementById(item.id);
                 if (btn) {
-                    btn.classList.remove("ring-2", "ring-blue-600", "bg-blue-100", "border-blue-600");
+                    btn.classList.remove("ring-2", "ring-blue-600", "ring-indigo-600", "bg-blue-100", "bg-indigo-100", "border-blue-600", "border-indigo-600");
                     if (item.active) {
-                        btn.classList.add("ring-2", "ring-blue-600", "bg-blue-100", "border-blue-600");
+                        if (item.id === "btnHakiki_KURSUS") {
+                            btn.classList.add("ring-2", "ring-indigo-600", "bg-indigo-100", "border-indigo-600");
+                        } else {
+                            btn.classList.add("ring-2", "ring-blue-600", "bg-blue-100", "border-blue-600");
+                        }
                         hakikiLabel = item.label;
                     }
                 }
             });
+
+            // Toggle Kursus Config panel visibility
+            const kursusSection = document.getElementById("kursusConfigSection");
+            if (kursusSection) {
+                if (isHakikiKursus) {
+                    kursusSection.classList.remove("hidden");
+                } else {
+                    kursusSection.classList.add("hidden");
+                }
+            }
 
             // 3. Highlight KLM buttons
             const klmText = (tempModalKlm.text || "").trim();
@@ -2933,7 +3115,7 @@
             const totalDailyHours = (tempModalHakiki.hours || 0) + (tempModalKlm.grossHours || 0);
             const summaryEl = document.getElementById("modalLiveSummaryText");
             const hoursEl = document.getElementById("modalLiveHoursText");
-            const dayTypeTag = (tempModalDayType === "HKA") ? `<span class="bg-rose-600 text-white font-black px-1.5 py-0.5 rounded text-[10px]">HKA</span>` : (tempModalDayType === "HRM" ? `<span class="bg-orange-600 text-white font-bold px-1.5 py-0.5 rounded text-[10px]">HRM</span>` : (tempModalDayType === "HKM" ? `<span class="bg-blue-600 text-white font-bold px-1.5 py-0.5 rounded text-[10px]">HKM</span>` : ""));
+            const dayTypeTag = (tempModalDayType === "HKA") ? `<span class="bg-rose-600 text-white font-black px-1.5 py-0.5 rounded text-[10px]">HKA</span>` : "";
             if (summaryEl) {
                 summaryEl.innerHTML = `Hari: ${dayTypeTag || "Biasa"} &nbsp;|&nbsp; Hakiki: <span class="text-blue-700 font-bold">${hakikiLabel}</span> &nbsp;|&nbsp; OT: <span class="text-amber-700 font-bold">${klmLabel}</span>`;
             }
@@ -2968,7 +3150,25 @@
 
             tempModalHakiki = { text: cellData.hakiki, hours: cellData.hHours, type: "" };
             tempModalKlm = { text: cellData.klm, grossHours: cellData.kGross, siangHours: cellData.kSiang, malamHours: cellData.kMalam };
-            tempModalDayType = cellData.dayType || (cellData.isHKA ? "HKA" : (cellData.hakiki === "HKA" ? "HKA" : (cellData.hakiki === "HRM" ? "HRM" : (cellData.hakiki === "HKM" ? "HKM" : "HBB"))));
+            tempModalDayType = cellData.dayType || (cellData.isHKA ? "HKA" : (cellData.hakiki === "HKA" ? "HKA" : "HBB"));
+
+            // If Kursus, populate Kursus inputs
+            if (cellData.hakiki && cellData.hakiki.startsWith("KURSUS")) {
+                tempModalHakiki.type = "KURSUS";
+                const hInput = document.getElementById("kursusHoursInput");
+                const tInput = document.getElementById("kursusTimeInput");
+                if (hInput) hInput.value = cellData.hHours || 8;
+                if (tInput) {
+                    const lines = cellData.hakiki.split('\n');
+                    if (lines.length >= 3) {
+                        tInput.value = lines.slice(2).join(' ');
+                    } else if (lines.length === 2) {
+                        tInput.value = lines[1];
+                    } else {
+                        tInput.value = "8.00 Am – 4.00 Pm";
+                    }
+                }
+            }
 
             document.getElementById("modalCustomKlmText").value = cellData.klm;
 
@@ -2984,8 +3184,6 @@
         function setModalHakiki(text, hours, type) {
             tempModalHakiki = { text, hours, type };
             if (text === "HKA") tempModalDayType = "HKA";
-            else if (text === "HRM") tempModalDayType = "HRM";
-            else if (text === "HKM") tempModalDayType = "HKM";
             updateModalButtonStates();
         }
 
